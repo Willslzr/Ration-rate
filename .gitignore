@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Databases (SQLite / Prisma)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Prisma
+packages/*/prisma/migrations/dev/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Misc
+.turbo/
+*.local
+
+# AI/project-guidance files (not part of the deliverable)
+Prompts.md
+ProyectoBase.md
