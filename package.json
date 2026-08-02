@@ -15,5 +15,8 @@
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
   }
 }
