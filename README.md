@@ -157,15 +157,49 @@ El `Dockerfile` **no** instala las dependencias del sistema que necesita Playwri
 RUN pnpm --filter @ratio/api exec playwright install --with-deps chromium
 ```
 
+## Deploy
+
+Stack de deploy gratuito: **Render** (API, desde el mismo `Dockerfile`) + **Neon** (Postgres serverless, requiere SSL) + **GitHub Actions** (dispara el scraping — el free tier de Render duerme el proceso tras 15 min sin tráfico, así que el cron interno no es confiable ahí).
+
+### 1. Base de datos — Neon
+
+1. Cuenta gratis en [neon.tech](https://neon.tech) → **New Project** (región cercana a donde despliegues la API).
+2. Copia la connection string que te da Neon — ya trae `?sslmode=require`. No hace falta configurar nada más de nuestro lado: `pg` (vía `pg-connection-string`) resuelve ese parámetro solo al parsear la URL — verificado explícitamente en `prismaClient.test.ts`.
+
+### 2. API — Render
+
+1. Cuenta gratis en [render.com](https://render.com) conectada a tu GitHub.
+2. **New → Blueprint**: Render detecta `render.yaml` en la raíz del repo automáticamente (alternativa manual: **New → Web Service** → seleccionar el repo → Runtime **Docker** → plan **Free**).
+3. El Blueprint pide los valores de las variables marcadas `sync: false` en `render.yaml`:
+   - `DATABASE_URL`: la connection string de Neon del paso anterior.
+   - `API_KEYS`: una clave larga y aleatoria (ej. `openssl rand -hex 32`) — la usan tanto el SDK como el workflow de scraping.
+   - `DISCORD_WEBHOOK_URL` / `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: opcionales, se pueden dejar vacíos.
+4. `CRON_ENABLED=false` ya viene fijo en `render.yaml` (no es un secreto, es una decisión de esta configuración de deploy) — el scraping se dispara externamente en el siguiente paso.
+5. Deploy: Render construye la imagen desde el `Dockerfile`, corre `prisma migrate deploy` contra Neon al arrancar (`docker-entrypoint.sh`), y expone `https://tu-servicio.onrender.com` gratis.
+6. Verificar: `curl https://tu-servicio.onrender.com/health` → `{"status":"ok","database":"ok"}`.
+
+### 3. Scraping externo — GitHub Actions
+
+El workflow `.github/workflows/scrape.yml` ya está en el repo (corre cada hora + se puede disparar a mano). Solo falta darle credenciales:
+
+1. GitHub → tu repo → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `RATIO_API_URL`: la URL de Render (ej. `https://tu-servicio.onrender.com`, sin slash final).
+   - `RATIO_API_KEY`: la misma API key configurada en Render.
+2. Prueba manual: **Actions → Scheduled Scrape → Run workflow**. El primer intento puede tardar en responder porque despierta el servicio dormido — el workflow ya reintenta hasta 3 veces con 30s de espera para cubrir justo eso.
+3. Confirmar que llegaron datos: `curl -H "x-api-key: TU_API_KEY" https://tu-servicio.onrender.com/v1/rates/VES/latest`.
+
+Cada push a `main` redespliega la API automáticamente (comportamiento por defecto de Render) — no hay paso manual adicional para deploys posteriores al primero.
+
 ## Endpoints
 
 Base URL local: `http://localhost:3000`. Las rutas `/v1/rates/*` requieren el header `x-api-key`; `/health` no.
 
-| Método | Ruta                        | Auth | Descripción                                                                                   |
-| ------ | --------------------------- | :--: | --------------------------------------------------------------------------------------------- |
-| GET    | `/health`                   |  No  | Estado del servicio y conectividad a la base de datos.                                        |
-| GET    | `/v1/rates/:isoCode/latest` |  Sí  | Última tasa registrada para una moneda. Query opcional: `source`.                             |
-| GET    | `/v1/rates/:isoCode`        |  Sí  | Tasa vigente en una fecha dada. Query: `date` (requerido, `YYYY-MM-DD`), `source` (opcional). |
+| Método | Ruta                        | Auth | Descripción                                                                                                                                                                                                                                  |
+| ------ | --------------------------- | :--: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`                   |  No  | Estado del servicio y conectividad a la base de datos.                                                                                                                                                                                       |
+| GET    | `/v1/rates/:isoCode/latest` |  Sí  | Última tasa registrada para una moneda. Query opcional: `source`.                                                                                                                                                                            |
+| GET    | `/v1/rates/:isoCode`        |  Sí  | Tasa vigente en una fecha dada. Query: `date` (requerido, `YYYY-MM-DD`), `source` (opcional).                                                                                                                                                |
+| POST   | `/v1/scrape`                |  Sí  | Dispara el scraping bajo demanda. `200`/`207` (fallos parciales) con `{succeeded, failed}`, `409` si ya hay un scrape en curso. Pensado para disparar externamente en deploys donde el cron interno no es confiable (ver [Deploy](#deploy)). |
 
 ```bash
 # Salud del servicio
@@ -184,6 +218,10 @@ curl -H "x-api-key: dev-local-key" "http://localhost:3000/v1/rates/VES?date=2026
 
 # Sin api key -> 401
 curl -i http://localhost:3000/v1/rates/VES/latest
+
+# Disparar el scraping manualmente
+curl -X POST -H "x-api-key: dev-local-key" http://localhost:3000/v1/scrape
+# => {"succeeded":["bcv_oficial","paralelo","oficial","paralelo","oficial","oficial"],"failed":[]}
 ```
 
 Todos los errores (400/401/404/429/500) responden con [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457):
