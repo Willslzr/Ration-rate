@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    // tsup's dts bundler (rollup-plugin-dts) injects an explicit `baseUrl`,
+    // which TypeScript 6 treats as a hard error unless deprecations are silenced.
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src"]
 }
