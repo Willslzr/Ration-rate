@@ -89,6 +89,9 @@ importers:
       prisma:
         specifier: ^7.9.1
         version: 7.9.1(@types/react@19.2.18)(better-sqlite3@13.0.2)(magicast@0.5.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
+      undici:
+        specifier: ^7.29.0
+        version: 7.29.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
