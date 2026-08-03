@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ratio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ratio}
+      POSTGRES_DB: ${POSTGRES_DB:-ratio}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ratio} -d ${POSTGRES_DB:-ratio}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ratio-api:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # prisma migrate deploy (see docker-entrypoint.sh) applies migrations
+      # from packages/api/prisma/postgresql/migrations against this database.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ratio}:${POSTGRES_PASSWORD:-ratio}@postgres:5432/${POSTGRES_DB:-ratio}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      API_KEYS: ${API_KEYS:-change-me-in-production}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      CRON_EXPRESSION: ${CRON_EXPRESSION:-0 * * * *}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+
+volumes:
+  postgres-data:

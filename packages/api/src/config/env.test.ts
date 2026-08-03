@@ -45,6 +45,16 @@ describe("loadEnv", () => {
     expect(env.TELEGRAM_CHAT_ID).toBeUndefined();
   });
 
+  it("treats an empty-string webhook variable as not configured (Docker Compose sets unset vars to '')", () => {
+    const env = loadEnv(
+      baseEnv({ DISCORD_WEBHOOK_URL: "", TELEGRAM_BOT_TOKEN: "", TELEGRAM_CHAT_ID: "" }),
+    );
+
+    expect(env.DISCORD_WEBHOOK_URL).toBeUndefined();
+    expect(env.TELEGRAM_BOT_TOKEN).toBeUndefined();
+    expect(env.TELEGRAM_CHAT_ID).toBeUndefined();
+  });
+
   it("accepts configured webhook variables", () => {
     const env = loadEnv(
       baseEnv({
