@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Willslzr/Ration-rate/actions/workflows/ci.yml/badge.svg)](https://github.com/Willslzr/Ration-rate/actions/workflows/ci.yml)
 
-Backend que extrae tasas de cambio (monedas sudamericanas y EUR frente a USD, con foco en el BCV oficial y el paralelo de Venezuela), las persiste como histórico inmutable y las expone vía una API REST y un SDK de NPM (`ration`).
+Backend que extrae tasas de cambio (monedas sudamericanas y EUR frente a USD, con foco en el BCV oficial y el paralelo de Venezuela), las persiste como histórico inmutable y las expone vía una API REST y un SDK de NPM (`@willslzr/ration`).
 
 Monorepo pnpm con arquitectura hexagonal: el dominio (`core`) no depende de nada; los adaptadores (`api`) y el cliente (`sdk`) dependen de `core`, nunca al revés.
 
@@ -12,7 +12,7 @@ Monorepo pnpm con arquitectura hexagonal: el dominio (`core`) no depende de nada
 
 ```mermaid
 flowchart TB
-    subgraph SDK["📦 packages/sdk — ration (NPM)"]
+    subgraph SDK["📦 packages/sdk — @willslzr/ration (NPM)"]
         direction TB
         RationFn["ration(isoCode, date?, options?)"]
     end
@@ -74,7 +74,7 @@ ratio/
 ├── packages/
 │   ├── core/   # Dominio puro: entidades, value objects, puertos y casos de uso
 │   ├── api/    # Adaptadores: persistencia, scraping, notificaciones, servidor HTTP y cron
-│   └── sdk/    # Paquete NPM publicable "ration"
+│   └── sdk/    # Paquete NPM publicable "@willslzr/ration"
 ├── .github/workflows/ci.yml   # lint + typecheck + build + test (coverage) en cada push/PR
 ├── Dockerfile                 # build multi-stage, runner sin dependencias de dev
 └── docker-compose.yml         # api + postgres:16, listo para `docker compose up`
@@ -188,16 +188,16 @@ Todos los errores (400/401/404/429/500) responden con [RFC 9457 Problem Details]
 
 El límite de rate (`RATE_LIMIT_MAX`, 100 req/min por defecto) se aplica por `x-api-key` (o por IP en rutas sin auth); al excederlo responde `429` con header `Retry-After`.
 
-## SDK (`ration`)
+## SDK (`@willslzr/ration`)
 
 Cliente ligero, cero dependencias de runtime (solo `fetch` nativo), build dual ESM/CJS.
 
 ```bash
-npm install ration
+npm install @willslzr/ration
 ```
 
 ```typescript
-import ration from "ration";
+import ration from "@willslzr/ration";
 
 // Tasa más reciente
 const latest = await ration("VES", undefined, {
