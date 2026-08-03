@@ -9,6 +9,17 @@ const envSchema = z.object({
   DISCORD_WEBHOOK_URL: z.string().min(1).optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
   TELEGRAM_CHAT_ID: z.string().min(1).optional(),
+  API_KEYS: z
+    .string()
+    .min(1, "API_KEYS is required")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((key) => key.trim())
+        .filter((key) => key.length > 0),
+    )
+    .refine((keys) => keys.length > 0, "API_KEYS must contain at least one non-empty key"),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
 });
 
 export type Env = z.infer<typeof envSchema>;
