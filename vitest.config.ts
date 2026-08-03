@@ -11,6 +11,17 @@ export default defineConfig({
       reportsDirectory: "./coverage",
       include: ["packages/*/src/**"],
       exclude: ["**/*.test.ts", "**/dist/**", "**/generated/**", "**/__fixtures__/**"],
+      thresholds: {
+        // core is the pure domain layer — kept to a stricter bar than the
+        // adapters in api/sdk, which include harder-to-unit-test glue
+        // (Playwright, cron scheduling, the process entrypoint).
+        "packages/core/src/**": {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+        },
+      },
     },
   },
 });
