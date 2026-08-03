@@ -15,3 +15,17 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
+model ExchangeRate {
+  id      Int    @id @default(autoincrement())
+  isoCode String @map("iso_code")
+
+  /// Decimal stored as string, never Float — avoids floating-point precision errors.
+  rate String
+
+  source      String
+  extractedAt DateTime @map("extracted_at")
+
+  @@index([isoCode, source, extractedAt])
+  @@map("exchange_rates")
+}
