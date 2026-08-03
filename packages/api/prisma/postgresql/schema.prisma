@@ -1,0 +1,35 @@
+// PostgreSQL variant of ../schema.prisma, used for production/Docker deployments.
+//
+// Prisma migrations (and the generated client's query engine) are
+// provider-specific, so a single schema/migration history can't serve both
+// SQLite (local dev + tests, ../schema.prisma) and PostgreSQL. This file
+// mirrors that schema exactly, just with provider = "postgresql" and its own
+// migration history below. Keep both in sync when the model changes.
+//
+// Generate: pnpm --filter @ratio/api run db:generate:postgresql
+// Migrate (dev):        pnpm --filter @ratio/api run db:migrate:postgresql
+// Migrate (production): prisma migrate deploy --schema=prisma/postgresql/schema.prisma
+//                        (this is what the Docker image runs on container startup)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ExchangeRate {
+  id      Int    @id @default(autoincrement())
+  isoCode String @map("iso_code")
+
+  /// Decimal stored as string, never Float — avoids floating-point precision errors.
+  rate String
+
+  source      String
+  extractedAt DateTime @map("extracted_at")
+
+  @@index([isoCode, source, extractedAt])
+  @@map("exchange_rates")
+}

@@ -6,12 +6,11 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-// Datasource is controlled entirely by DATABASE_URL:
-//   - development: "file:./dev.db" (SQLite)
-//   - production:  a PostgreSQL connection string
-// To switch providers: change `provider` below to "postgresql", point
-// DATABASE_URL at the Postgres instance, and regenerate migrations for
-// that provider (SQLite and PostgreSQL migrations are not interchangeable).
+// This schema targets SQLite for local development and tests
+// (DATABASE_URL="file:./dev.db"). Migrations are provider-specific, so
+// production/Docker uses a separate PostgreSQL variant instead of switching
+// this file in place: see prisma/postgresql/schema.prisma for the schema,
+// migrations, and the commands to (re)generate/migrate it.
 datasource db {
   provider = "sqlite"
 }

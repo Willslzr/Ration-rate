@@ -1,0 +1,52 @@
+# Dependencies (reinstalled inside the image) and build output (rebuilt inside the image)
+node_modules/
+dist/
+build/
+**/dist/
+**/node_modules/
+**/src/generated/
+*.tsbuildinfo
+
+# Environment variables — real secrets never belong in the image
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Tests / coverage — not needed at runtime
+coverage/
+.nyc_output/
+**/*.test.ts
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# VCS and CI
+.git/
+.github/
+
+# Misc
+.turbo/
+*.local
+
+# AI/project-guidance files
+Prompts.md
+ProyectoBase.md

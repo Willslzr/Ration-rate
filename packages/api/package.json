@@ -14,12 +14,16 @@
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy"
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:generate:postgresql": "prisma generate --config=prisma.postgresql.config.ts",
+    "db:migrate:postgresql": "prisma migrate dev --config=prisma.postgresql.config.ts",
+    "db:migrate:deploy:postgresql": "prisma migrate deploy --config=prisma.postgresql.config.ts"
   },
   "dependencies": {
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/type-provider-typebox": "^6.1.0",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@ratio/core": "workspace:*",
     "@sinclair/typebox": "^0.34.52",
@@ -28,10 +32,12 @@
     "dotenv": "^17.4.2",
     "fastify": "^5.11.0",
     "node-cron": "^4.6.0",
+    "pg": "^8.22.0",
     "playwright": "^1.62.1",
+    "prisma": "^7.9.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "prisma": "^7.9.1"
+    "@types/pg": "^8.20.3"
   }
 }
