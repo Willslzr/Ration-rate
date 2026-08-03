@@ -1,0 +1,58 @@
+name: Release SDK
+
+on:
+  push:
+    tags:
+      - "sdk-v*"
+
+permissions:
+  contents: read
+  id-token: write # required for `npm publish --provenance`
+
+jobs:
+  publish:
+    name: Publish @willslzr/ration to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches packages/sdk/package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#sdk-v}"
+          PKG_VERSION=$(node -p "require('./packages/sdk/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME (version $TAG_VERSION) does not match packages/sdk/package.json version ($PKG_VERSION)."
+            exit 1
+          fi
+          echo "Tag version $TAG_VERSION matches packages/sdk/package.json."
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # Same Node-22 requirement as ci.yml: pnpm@11 (pinned via "packageManager")
+      # requires Node >=22.13 for the node:sqlite builtin it uses internally.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Builds @willslzr/ration plus the workspace packages it depends on
+      # (@ratio/core, @ratio/api — devDependencies used by its e2e tests,
+      # which import their compiled dist/ output). Their own test suites
+      # are not run here, only the sdk's.
+      - name: Build sdk and its workspace dependencies
+        run: pnpm --filter "@willslzr/ration..." run build
+
+      - name: Test sdk only
+        run: pnpm exec vitest run --project="@willslzr/ration"
+
+      - name: Publish to npm
+        run: pnpm --filter "@willslzr/ration" publish --provenance --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

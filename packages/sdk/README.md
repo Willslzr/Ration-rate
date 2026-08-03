@@ -93,6 +93,20 @@ try {
 }
 ```
 
+## Release (publicar una nueva versión)
+
+Publicar a npm es automático vía `.github/workflows/release.yml` — nunca se corre `npm publish` a mano. El flujo:
+
+1. Sube la versión en `packages/sdk/package.json` (`"version": "0.1.1"`, siguiendo [semver](https://semver.org)) y commitea el cambio (ej. `chore(sdk): bump version to 0.1.1`).
+2. Crea un tag con el prefijo `sdk-v` que coincida **exactamente** con esa versión:
+   ```bash
+   git tag sdk-v0.1.1
+   git push origin sdk-v0.1.1
+   ```
+3. El push del tag dispara el workflow, que: verifica que la versión del tag coincide con `package.json` (falla si no coinciden), instala, compila el sdk y sus dependencias de workspace (`@ratio/core`, `@ratio/api`), corre solo los tests del sdk, y publica con `npm publish --provenance --access public`.
+
+Requiere el secret `NPM_TOKEN` configurado en el repo (Settings → Secrets and variables → Actions), con un [access token](https://docs.npmjs.com/creating-and-viewing-access-tokens) de npm con permiso de publicación sobre `@willslzr/ration`.
+
 ## Licencia
 
 MIT © [willslzr](https://github.com/Willslzr)
