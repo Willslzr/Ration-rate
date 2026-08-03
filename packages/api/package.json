@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "start": "node dist/main.js",
     "scrape": "node dist/app/cli/scrape.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",

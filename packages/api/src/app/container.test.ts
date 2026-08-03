@@ -12,6 +12,7 @@ function buildEnv(overrides: Partial<Env> = {}): Env {
   return {
     DATABASE_URL: "file:./dev.db",
     NODE_ENV: "test",
+    PORT: 3000,
     CRON_EXPRESSION: "0 * * * *",
     ...overrides,
   };

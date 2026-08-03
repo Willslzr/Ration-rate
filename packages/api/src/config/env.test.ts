@@ -9,6 +9,7 @@ describe("loadEnv", () => {
     expect(env).toEqual({
       DATABASE_URL: "file:./dev.db",
       NODE_ENV: "development",
+      PORT: 3000,
       CRON_EXPRESSION: "0 * * * *",
     });
   });
@@ -17,6 +18,11 @@ describe("loadEnv", () => {
     const env = loadEnv({ DATABASE_URL: "file:./dev.db" });
 
     expect(env.NODE_ENV).toBe("development");
+  });
+
+  it("defaults PORT to 3000 and coerces a configured value to a number", () => {
+    expect(loadEnv({ DATABASE_URL: "file:./dev.db" }).PORT).toBe(3000);
+    expect(loadEnv({ DATABASE_URL: "file:./dev.db", PORT: "8080" }).PORT).toBe(8080);
   });
 
   it("defaults CRON_EXPRESSION to hourly when not provided", () => {
