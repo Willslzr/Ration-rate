@@ -17,9 +17,6 @@ build/
 *.sqlite
 *.sqlite3
 
-# Prisma
-packages/*/prisma/migrations/dev/
-
 # Test coverage
 coverage/
 .nyc_output/

@@ -1,0 +1,2 @@
+# Generated Prisma Client (regenerated via `pnpm --filter @ratio/api run db:generate`)
+/src/generated/prisma
