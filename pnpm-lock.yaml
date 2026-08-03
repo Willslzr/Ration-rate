@@ -99,6 +99,9 @@ importers:
       '@types/pg':
         specifier: ^8.20.3
         version: 8.20.3
+      pg-connection-string:
+        specifier: ^2.14.0
+        version: 2.14.0
 
   packages/core: {}
 

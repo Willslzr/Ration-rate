@@ -20,6 +20,12 @@ export function isPostgresUrl(databaseUrl: string): boolean {
  * here, or Prisma throws PrismaClientInitializationError immediately. Each
  * deployment context (local dev vs. the Docker image) generates the matching
  * variant before running; see each schema file's header comment.
+ *
+ * TLS (required by managed Postgres like Neon) isn't configured here at
+ * all — PrismaPg passes databaseUrl straight to `pg`, which parses
+ * `?sslmode=require` (present in Neon's own connection strings) itself via
+ * pg-connection-string. See prismaClient.test.ts for a pinned-down test of
+ * that behavior.
  */
 export function createPrismaClient(databaseUrl: string): PrismaClient {
   const adapter = isPostgresUrl(databaseUrl)
