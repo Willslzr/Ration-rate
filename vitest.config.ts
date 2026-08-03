@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     projects: ["packages/*"],
     passWithNoTests: true,
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
   },
 });
