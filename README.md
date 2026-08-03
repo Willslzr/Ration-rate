@@ -4,6 +4,8 @@
 
 Backend que extrae tasas de cambio (monedas sudamericanas y EUR frente a USD, con foco en el BCV oficial y el paralelo de Venezuela), las persiste como histórico inmutable y las expone vía una API REST y un SDK de NPM (`@willslzr/ration`).
 
+**API en vivo**: `https://ration-rate.onrender.com` — lecturas públicas, sin API key. Probá: `curl https://ration-rate.onrender.com/v1/rates/VES/latest`.
+
 Monorepo pnpm con arquitectura hexagonal: el dominio (`core`) no depende de nada; los adaptadores (`api`) y el cliente (`sdk`) dependen de `core`, nunca al revés.
 
 **Stack**: TypeScript estricto · Fastify 5 · Prisma 7 (driver adapters, Postgres/SQLite) · Cheerio/Playwright · Vitest · Docker · GitHub Actions.
@@ -250,16 +252,17 @@ npm install @willslzr/ration
 ```typescript
 import ration from "@willslzr/ration";
 
-// Tasa más reciente — sin apiKey: las lecturas son públicas, no hace falta clave
-const latest = await ration("VES", undefined, { baseUrl: "http://localhost:3000" });
+// Tasa más reciente — sin apiKey: las lecturas son públicas, no hace falta clave.
+// baseUrl apunta a la instancia en vivo; usa http://localhost:3000 si corrés la tuya local.
+const latest = await ration("VES", undefined, { baseUrl: "https://ration-rate.onrender.com" });
 console.log(latest);
-// { isoCode: 'VES', rate: '36.5842', source: 'bcv_oficial', extractedAt: 2026-08-02T10:00:00.000Z }
+// { isoCode: 'VES', rate: '748.78640000', source: 'bcv_oficial', extractedAt: 2026-08-03T21:52:02.719Z }
 
 // Tasa histórica (acepta 'DD/MM/YYYY', 'YYYY-MM-DD' o Date)
-const historic = await ration("VES", "14/04/2026", { baseUrl: "http://localhost:3000" });
+const historic = await ration("VES", "14/04/2026", { baseUrl: "https://ration-rate.onrender.com" });
 ```
 
-`baseUrl` también puede venir de `RATION_BASE_URL` (variable de entorno), así que en un proyecto con `.env` cargado alcanza con `await ration("VES")`. `apiKey`/`RATION_API_KEY` existen por si en algún momento se protege el servicio o corres tu propio fork con auth habilitada, pero contra esta instancia no son necesarios. Detalle completo de opciones, tipos de retorno y jerarquía de errores (`RationError`, `RationApiError`, `RationTimeoutError`, `RationNetworkError`) en [`packages/sdk/README.md`](packages/sdk/README.md).
+`baseUrl` también puede venir de `RATION_BASE_URL` (variable de entorno), así que con `RATION_BASE_URL=https://ration-rate.onrender.com` en el `.env` alcanza con `await ration("VES")`. `apiKey`/`RATION_API_KEY` existen por si en algún momento se protege el servicio o corres tu propio fork con auth habilitada, pero contra esta instancia no son necesarios. Detalle completo de opciones, tipos de retorno y jerarquía de errores (`RationError`, `RationApiError`, `RationTimeoutError`, `RationNetworkError`) en [`packages/sdk/README.md`](packages/sdk/README.md).
 
 ## Variables de entorno
 

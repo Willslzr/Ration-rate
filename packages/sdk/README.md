@@ -19,11 +19,11 @@ npm install @willslzr/ration
 
 ## Quickstart
 
-El SDK necesita saber contra qué instancia de la [API Ratio](https://github.com/Willslzr/Ration-rate) hablar. Las lecturas son públicas — no hace falta ninguna API key. La forma recomendada es vía variable de entorno, así el código nunca hardcodea la URL:
+El SDK necesita saber contra qué instancia de la [API Ratio](https://github.com/Willslzr/Ration-rate) hablar. Hay una instancia en vivo, gratis y pública en `https://ration-rate.onrender.com` — las lecturas no requieren API key, así que alcanza con apuntar `baseUrl` ahí (o desplegar la tuya propia siguiendo la guía de [Deploy](https://github.com/Willslzr/Ration-rate#deploy) del repo). La forma recomendada es vía variable de entorno, así el código nunca hardcodea la URL:
 
 ```bash
 # .env
-RATION_BASE_URL="https://tu-instancia-de-ratio.example.com"   # reemplaza por donde despliegues tu API
+RATION_BASE_URL="https://ration-rate.onrender.com"   # o la URL de tu propio despliegue
 ```
 
 ```typescript
@@ -31,7 +31,7 @@ import ration from "@willslzr/ration";
 
 const latest = await ration("VES");
 console.log(latest);
-// { isoCode: 'VES', rate: '36.5842', source: 'bcv_oficial', extractedAt: 2026-08-02T10:00:00.000Z }
+// { isoCode: 'VES', rate: '748.78640000', source: 'bcv_oficial', extractedAt: 2026-08-03T21:52:02.719Z }
 ```
 
 También se puede pasar explícitamente por opción, sin depender de la variable de entorno:
@@ -40,15 +40,15 @@ También se puede pasar explícitamente por opción, sin depender de la variable
 import ration from "@willslzr/ration";
 
 // Tasa más reciente
-const latest = await ration("VES", undefined, {
-  baseUrl: "https://tu-instancia-de-ratio.example.com",
-});
+const latest = await ration("VES", undefined, { baseUrl: "https://ration-rate.onrender.com" });
 
 // Tasa para una fecha específica (acepta 'DD/MM/YYYY', 'YYYY-MM-DD' o Date)
 const historic = await ration("VES", "14/04/2026", {
-  baseUrl: "https://tu-instancia-de-ratio.example.com",
+  baseUrl: "https://ration-rate.onrender.com",
 });
 ```
+
+> Render's free tier duerme el proceso tras 15 min sin tráfico — la primera petición después de un rato inactivo puede tardar unos segundos en despertar el servicio antes de responder.
 
 ## Opciones
 
