@@ -95,6 +95,12 @@ importers:
 
   packages/sdk:
     devDependencies:
+      '@ratio/api':
+        specifier: workspace:*
+        version: link:../api
+      '@ratio/core':
+        specifier: workspace:*
+        version: link:../core
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(supports-color@7.2.0)(typescript@6.0.3)

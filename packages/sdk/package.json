@@ -28,6 +28,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
+    "@ratio/api": "workspace:*",
+    "@ratio/core": "workspace:*",
     "tsup": "^8.5.1"
   }
 }
