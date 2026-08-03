@@ -20,11 +20,12 @@ packages/
 Desde la raíz (corren en todos los workspaces):
 
 ```
-pnpm build       # tsc por paquete
-pnpm lint        # eslint .
-pnpm format      # prettier --write .
-pnpm typecheck   # tsc --noEmit por paquete
-pnpm test        # vitest run (proyectos por workspace)
+pnpm build          # tsc por paquete
+pnpm lint           # eslint .
+pnpm format         # prettier --write .
+pnpm typecheck      # tsc --noEmit por paquete
+pnpm test           # vitest run (proyectos por workspace)
+pnpm test:coverage  # vitest run --coverage
 ```
 
 Para correr un solo paquete:
@@ -49,6 +50,8 @@ Nota: `pnpm typecheck` corre `build` primero — cuando un paquete importa de ot
 
 - Todo caso de uso y todo adaptador lleva tests (Vitest).
 - Los tests de scraping usan **fixtures HTML locales**; nunca dependen de red real ni de sitios externos.
+- Tests end-to-end en `packages/api/test/e2e` y `packages/sdk/test/e2e`: levantan el servidor real (`buildServer` + repositorio Prisma real) sobre SQLite temporal (`mkdtemp`), sin mocks del framework HTTP ni de la base de datos.
+- Cobertura de `core` con umbral **80%** (`vitest.config.ts` → `coverage.thresholds`) — CI falla si baja. No hay umbral configurado para `api`/`sdk` (incluyen glue más difícil de testear unitariamente: Playwright, cron, el entrypoint del proceso).
 
 ## 5. Regla de commits (crítica)
 
