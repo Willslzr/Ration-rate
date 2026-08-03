@@ -18,6 +18,24 @@ async function main(): Promise<void> {
     nodeEnv: container.env.NODE_ENV,
   });
 
+  // This deployment's image has no Chromium installed (see Dockerfile) — an
+  // active 'spa' target would fail every time it's scraped (ScrapeAllTargets
+  // catches that per-target and keeps going, so it's not a crash), but
+  // surfacing it once at startup is far easier to notice than digging it out
+  // of scrape failure logs later.
+  const unsupportedSpaTargets = container.targets.filter(
+    (target) => target.active && target.type === "spa",
+  );
+  if (unsupportedSpaTargets.length > 0) {
+    app.log.warn(
+      `${unsupportedSpaTargets.length} active 'spa' target(s) configured (${unsupportedSpaTargets
+        .map((target) => target.sourceName)
+        .join(
+          ", ",
+        )}) but this image has no Chromium installed — scraping them will fail until Playwright/Chromium is added to the Dockerfile.`,
+    );
+  }
+
   const scheduler = new Scheduler({
     cronExpression: container.env.CRON_EXPRESSION,
     scrapeAllTargets: container.useCases.scrapeAllTargets,

@@ -77,11 +77,18 @@ COPY --from=build --chown=node:node /app/packages/api/prisma ./packages/api/pris
 COPY --from=build --chown=node:node /app/packages/api/prisma.postgresql.config.ts ./packages/api/prisma.postgresql.config.ts
 COPY --chown=node:node docker-entrypoint.sh ./
 
+# Render (and most PaaS Docker runners) inject their own PORT at runtime —
+# e.g. Render defaults to 10000, not this image's own default of 3000. The
+# app already reads PORT from the environment (see main.ts); this default
+# only applies when nothing else sets it (docker-compose, `docker run`).
+ENV PORT=3000
 EXPOSE 3000
 USER node
 
 # node:20-slim has no curl/wget; Node's own native fetch avoids installing one.
+# Reads PORT at HEALTHCHECK-run time (not baked in), so this stays correct
+# whatever port the app was actually told to listen on.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+  CMD ["node", "-e", "fetch(`http://127.0.0.1:${process.env.PORT}/health`).then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
 
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
