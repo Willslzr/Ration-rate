@@ -3,6 +3,7 @@ import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import type { GetLatestRate, GetRateByDate } from "@ratio/core";
 import Fastify from "fastify";
 import { registerErrorHandler } from "./errorHandler.js";
+import { registerHealthRoute } from "./healthRoute.js";
 import { registerRatesRoutes } from "./ratesRoutes.js";
 
 export type NodeEnv = "development" | "test" | "production";
@@ -10,6 +11,7 @@ export type NodeEnv = "development" | "test" | "production";
 export interface BuildServerDeps {
   readonly getLatestRate: Pick<GetLatestRate, "execute">;
   readonly getRateByDate: Pick<GetRateByDate, "execute">;
+  readonly checkDatabaseHealth: () => Promise<boolean>;
   readonly nodeEnv?: NodeEnv;
 }
 
@@ -42,6 +44,7 @@ export function buildServer(deps: BuildServerDeps): ServerInstance {
   const app = createFastifyInstance(deps.nodeEnv);
 
   registerErrorHandler(app);
+  registerHealthRoute(app, deps);
   registerRatesRoutes(app, deps);
 
   return app;

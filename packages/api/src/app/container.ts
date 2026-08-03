@@ -24,6 +24,7 @@ export interface Container {
     readonly getRateByDate: GetRateByDate;
     readonly scrapeAllTargets: ScrapeAllTargets;
   };
+  checkDatabaseHealth(): Promise<boolean>;
   dispose(): Promise<void>;
 }
 
@@ -70,6 +71,14 @@ export function createContainer(env: Env = loadEnv()): Container {
     env,
     targets,
     useCases,
+    async checkDatabaseHealth(): Promise<boolean> {
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+        return true;
+      } catch {
+        return false;
+      }
+    },
     async dispose(): Promise<void> {
       await extractorFactory.dispose();
       await prisma.$disconnect();
