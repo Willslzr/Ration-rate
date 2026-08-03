@@ -10,6 +10,8 @@ function buildDeps(overrides: Partial<BuildServerDeps> = {}): BuildServerDeps {
   return {
     getLatestRate: { execute: vi.fn() },
     getRateByDate: { execute: vi.fn() },
+    scrapeAllTargets: { execute: vi.fn() },
+    targets: [],
     checkDatabaseHealth: vi.fn().mockResolvedValue(true),
     apiKeys: [API_KEY],
     nodeEnv: "test",

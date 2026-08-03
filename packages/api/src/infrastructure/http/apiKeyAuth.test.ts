@@ -21,6 +21,8 @@ function buildDeps(overrides: Partial<BuildServerDeps> = {}): BuildServerDeps {
   return {
     getLatestRate: { execute: vi.fn().mockResolvedValue(buildRate()) },
     getRateByDate: { execute: vi.fn().mockResolvedValue(buildRate()) },
+    scrapeAllTargets: { execute: vi.fn().mockResolvedValue({ succeeded: [], failed: [] }) },
+    targets: [],
     checkDatabaseHealth: vi.fn().mockResolvedValue(true),
     apiKeys: [API_KEY],
     nodeEnv: "test",

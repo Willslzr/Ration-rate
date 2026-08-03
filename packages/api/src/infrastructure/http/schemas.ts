@@ -24,3 +24,9 @@ export const RateResponseSchema = Type.Object({
   extractedAt: Type.String(),
 });
 export type RateResponse = Static<typeof RateResponseSchema>;
+
+export const ScrapeSummarySchema = Type.Object({
+  succeeded: Type.Array(Type.String()),
+  failed: Type.Array(Type.String()),
+});
+export type ScrapeSummaryResponse = Static<typeof ScrapeSummarySchema>;

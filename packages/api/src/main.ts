@@ -10,6 +10,8 @@ async function main(): Promise<void> {
   const app = buildServer({
     getLatestRate: container.useCases.getLatestRate,
     getRateByDate: container.useCases.getRateByDate,
+    scrapeAllTargets: container.useCases.scrapeAllTargets,
+    targets: container.targets,
     checkDatabaseHealth: () => container.checkDatabaseHealth(),
     apiKeys: container.env.API_KEYS,
     rateLimitMax: container.env.RATE_LIMIT_MAX,

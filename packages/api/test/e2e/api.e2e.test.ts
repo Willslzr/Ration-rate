@@ -60,6 +60,8 @@ beforeAll(async () => {
   app = buildServer({
     getLatestRate: new GetLatestRate(repository),
     getRateByDate: new GetRateByDate(repository),
+    scrapeAllTargets: { execute: () => Promise.resolve({ succeeded: [], failed: [] }) },
+    targets: [],
     checkDatabaseHealth: () => Promise.resolve(true),
     apiKeys: [API_KEY],
     nodeEnv: "test",

@@ -6,6 +6,8 @@ function buildDeps(overrides: Partial<BuildServerDeps> = {}): BuildServerDeps {
   return {
     getLatestRate: { execute: vi.fn() },
     getRateByDate: { execute: vi.fn() },
+    scrapeAllTargets: { execute: vi.fn() },
+    targets: [],
     checkDatabaseHealth: vi.fn().mockResolvedValue(true),
     nodeEnv: "test",
     ...overrides,

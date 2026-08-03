@@ -1,21 +1,24 @@
 import { randomUUID } from "node:crypto";
 import helmet from "@fastify/helmet";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import type { GetLatestRate, GetRateByDate } from "@ratio/core";
+import type { GetLatestRate, GetRateByDate, ScrapeAllTargets, ScrapeTarget } from "@ratio/core";
 import Fastify from "fastify";
 import { registerApiKeyAuth } from "./apiKeyAuth.js";
 import { registerErrorHandler } from "./errorHandler.js";
 import { registerHealthRoute } from "./healthRoute.js";
 import { registerRateLimit } from "./rateLimit.js";
 import { registerRatesRoutes } from "./ratesRoutes.js";
+import { registerScrapeRoute } from "./scrapeRoute.js";
 
 export type NodeEnv = "development" | "test" | "production";
 
 export interface BuildServerDeps {
   readonly getLatestRate: Pick<GetLatestRate, "execute">;
   readonly getRateByDate: Pick<GetRateByDate, "execute">;
+  readonly scrapeAllTargets: Pick<ScrapeAllTargets, "execute">;
+  readonly targets: readonly ScrapeTarget[];
   readonly checkDatabaseHealth: () => Promise<boolean>;
-  /** Valid API keys for /v1/rates/*. Defaults to none, i.e. those routes reject every request. */
+  /** Valid API keys for /v1/rates/* and /v1/scrape. Defaults to none, i.e. those routes reject every request. */
   readonly apiKeys?: readonly string[];
   /** Requests allowed per minute, keyed by API key (or IP). Defaults to 100. */
   readonly rateLimitMax?: number;
@@ -67,9 +70,10 @@ export function buildServer(deps: BuildServerDeps): ServerInstance {
     registerHealthRoute(healthScope, deps);
   });
 
-  app.register(async (ratesScope) => {
-    registerApiKeyAuth(ratesScope, { apiKeys: deps.apiKeys ?? [] });
-    registerRatesRoutes(ratesScope, deps);
+  app.register(async (protectedScope) => {
+    registerApiKeyAuth(protectedScope, { apiKeys: deps.apiKeys ?? [] });
+    registerRatesRoutes(protectedScope, deps);
+    registerScrapeRoute(protectedScope, deps);
   });
 
   return app;

@@ -17,3 +17,12 @@ export class RateLimitExceededError extends Error {
     this.name = "RateLimitExceededError";
   }
 }
+
+export class ScrapeInProgressError extends Error {
+  readonly code = "SCRAPE_IN_PROGRESS";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ScrapeInProgressError";
+  }
+}
