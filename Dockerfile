@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
 
 # Playwright/Chromium note (see section 2 justification below the runner stage):
-# this image does NOT install Chromium's OS dependencies. The only 'spa'
-# (Playwright) target in packages/api/src/targets.config.ts is `active: false`;
-# the real, active target (bcv_oficial) is 'html' (Cheerio, no browser needed).
+# this image does NOT install Chromium's OS dependencies. Every active target
+# in packages/api/src/targets.config.ts is 'html' (Cheerio, no browser
+# needed) — none currently need JS execution to expose their rate.
 # Installing Chromium's dependencies would add ~300+MB for a code path that
-# never actually runs. If a real 'spa' target is ever activated, add before
+# no active target uses. If a real 'spa' target is ever activated, add before
 # the runner's final layers:
 #   RUN pnpm --filter @ratio/api exec playwright install --with-deps chromium
 

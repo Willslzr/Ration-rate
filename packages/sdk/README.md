@@ -1,6 +1,15 @@
 # ration
 
-SDK de TypeScript para consultar **tasas de cambio del dólar** en monedas sudamericanas — histórico y en tiempo real. Empieza con la tasa oficial del **BCV (Banco Central de Venezuela)** para el bolívar (VES), con más monedas en camino: peso argentino (ARS), peso colombiano (COP), peso mexicano (MXN) y euro (EUR). Cero dependencias de runtime — usa exclusivamente `fetch` nativo (Node ≥ 18) — y build dual ESM/CJS con tipos incluidos.
+SDK de TypeScript para consultar **tasas de cambio del dólar** en monedas sudamericanas — histórico y en tiempo real. Bolívar venezolano (oficial BCV y paralelo), peso argentino (oficial y paralelo), euro y peso colombiano, con más monedas en camino (peso mexicano). Cero dependencias de runtime — usa exclusivamente `fetch` nativo (Node ≥ 18) — y build dual ESM/CJS con tipos incluidos.
+
+## Monedas soportadas
+
+| Moneda             | Código ISO | Fuentes (`source`)        |
+| ------------------ | ---------- | ------------------------- |
+| Bolívar venezolano | `VES`      | `bcv_oficial`, `paralelo` |
+| Peso argentino     | `ARS`      | `oficial`, `paralelo`     |
+| Euro               | `EUR`      | `oficial`                 |
+| Peso colombiano    | `COP`      | `oficial`                 |
 
 ## Instalación
 

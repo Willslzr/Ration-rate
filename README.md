@@ -80,6 +80,19 @@ ratio/
 └── docker-compose.yml         # api + postgres:16, listo para `docker compose up`
 ```
 
+## Monedas soportadas
+
+Actualizadas cada hora vía cron (`CRON_EXPRESSION`, default `0 * * * *`) contra las fuentes configuradas en `packages/api/src/targets.config.ts`:
+
+| Moneda             | Código ISO | Fuentes (`source`)                                                                                                                   |
+| ------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Bolívar venezolano | `VES`      | `bcv_oficial` ([BCV](https://www.bcv.org.ve)), `paralelo` ([monitordedivisavenezuela.com](https://www.monitordedivisavenezuela.com)) |
+| Peso argentino     | `ARS`      | `oficial`, `paralelo` ([dolarhoy.com](https://dolarhoy.com))                                                                         |
+| Euro               | `EUR`      | `oficial` ([Banco Central Europeo](https://www.ecb.europa.eu))                                                                       |
+| Peso colombiano    | `COP`      | `oficial` ([dolar-colombia.com](https://www.dolar-colombia.com))                                                                     |
+
+Todas via scraping HTML con Cheerio (sin navegador — ver [por qué la imagen no incluye Chromium](#por-qué-la-imagen-no-incluye-chromium)). Agregar una moneda o fuente nueva es declarar un `ScrapeTarget` más en `targets.config.ts` (URL, selector CSS, `type: 'html'` o `'spa'` si la fuente exige JavaScript) — no requiere tocar `core` ni la API.
+
 ## Quickstart local (pnpm)
 
 Requisitos: Node ≥ 20 (`.nvmrc` fija `20`), pnpm vía Corepack.
@@ -138,7 +151,7 @@ Ambos schemas definen el mismo modelo `ExchangeRate`; solo cambia `provider` y e
 
 ### Por qué la imagen no incluye Chromium
 
-El `Dockerfile` **no** instala las dependencias del sistema que necesita Playwright/Chromium. El único target de tipo `'spa'` en `targets.config.ts` está `active: false`; el target real (`bcv_oficial`) es `'html'` (Cheerio, sin navegador). Instalar Chromium agregaría ~300+ MB para una ruta de código que nunca se ejecuta hoy. Si se activa un target `'spa'` real, el propio `Dockerfile` documenta el comando a agregar:
+El `Dockerfile` **no** instala las dependencias del sistema que necesita Playwright/Chromium. Los 6 targets activos en `targets.config.ts` son de tipo `'html'` (Cheerio, sin navegador) — ninguna de las fuentes actuales necesita ejecutar JavaScript para exponer el dato. Instalar Chromium agregaría ~300+ MB para una ruta de código que hoy no se ejecuta. Si se agrega un target `'spa'` que sí lo requiera, el propio `Dockerfile` documenta el comando a agregar:
 
 ```dockerfile
 RUN pnpm --filter @ratio/api exec playwright install --with-deps chromium

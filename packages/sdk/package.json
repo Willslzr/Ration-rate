@@ -1,7 +1,7 @@
 {
   "name": "@willslzr/ration",
   "version": "0.1.0",
-  "description": "Lightweight TypeScript SDK for South American currency exchange rates — official BCV dollar rate for Venezuela (VES) today, more currencies (ARS, COP, MXN, EUR) on the roadmap. Zero runtime dependencies, dual ESM/CJS.",
+  "description": "Lightweight TypeScript SDK for South American currency exchange rates — VES (BCV official + parallel), ARS (official + blue), EUR, and COP today, more currencies (MXN) on the roadmap. Zero runtime dependencies, dual ESM/CJS.",
   "keywords": [
     "exchange-rate",
     "exchange-rates",
@@ -15,6 +15,10 @@
     "usd",
     "bcv",
     "venezuela",
+    "argentina",
+    "dolar-blue",
+    "euro",
+    "colombia",
     "south-america",
     "latam",
     "sdk",
