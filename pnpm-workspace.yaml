@@ -5,3 +5,8 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   prisma: true
+overrides:
+  # GHSA-g7r4-m6w7-qqqr: esbuild's dev server allowed arbitrary file reads on
+  # Windows below 0.28.1. Only reachable through vite/tsup's dev tooling
+  # (devDependencies, never shipped), but pinned to the patched version anyway.
+  esbuild: ">=0.28.1"
