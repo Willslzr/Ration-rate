@@ -1,6 +1,6 @@
-import { DomainError } from "@ratio/core";
+import { DomainError, RateValue } from "@ratio/core";
 import type { RateExtractor, ScrapeTarget } from "@ratio/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CheerioExtractor } from "./CheerioExtractor.js";
 import { ExtractorFactory } from "./ExtractorFactory.js";
 import { PlaywrightExtractor } from "./PlaywrightExtractor.js";
@@ -62,5 +62,32 @@ describe("ExtractorFactory", () => {
       factory.getExtractor(buildTarget({ type: "json" as ScrapeTarget["type"] })),
     ).toBeInstanceOf(FakeExtractor);
     expect(factory.getExtractor(buildTarget({ type: "html" }))).toBeInstanceOf(CheerioExtractor);
+  });
+
+  it("implements RateExtractor by delegating to the resolved strategy", async () => {
+    const rate = RateValue.create("36.5842");
+    const fakeExtractor: RateExtractor = { extract: vi.fn().mockResolvedValue(rate) };
+    const factory = new ExtractorFactory({ html: () => fakeExtractor });
+
+    const result = await factory.extract(buildTarget({ type: "html" }));
+
+    expect(result).toBe(rate);
+    expect(fakeExtractor.extract).toHaveBeenCalledTimes(1);
+  });
+
+  it("disposes every cached extractor that supports it", async () => {
+    const dispose = vi.fn().mockResolvedValue(undefined);
+    const disposableExtractor = { extract: vi.fn(), dispose };
+    const plainExtractor: RateExtractor = { extract: vi.fn() };
+    const factory = new ExtractorFactory({
+      spa: () => disposableExtractor,
+      html: () => plainExtractor,
+    });
+    factory.getExtractor(buildTarget({ type: "spa" }));
+    factory.getExtractor(buildTarget({ type: "html" }));
+
+    await expect(factory.dispose()).resolves.toBeUndefined();
+
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
 });

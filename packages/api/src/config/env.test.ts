@@ -6,13 +6,44 @@ describe("loadEnv", () => {
   it("parses a valid environment", () => {
     const env = loadEnv({ DATABASE_URL: "file:./dev.db", NODE_ENV: "development" });
 
-    expect(env).toEqual({ DATABASE_URL: "file:./dev.db", NODE_ENV: "development" });
+    expect(env).toEqual({
+      DATABASE_URL: "file:./dev.db",
+      NODE_ENV: "development",
+      CRON_EXPRESSION: "0 * * * *",
+    });
   });
 
   it("defaults NODE_ENV to development when not provided", () => {
     const env = loadEnv({ DATABASE_URL: "file:./dev.db" });
 
     expect(env.NODE_ENV).toBe("development");
+  });
+
+  it("defaults CRON_EXPRESSION to hourly when not provided", () => {
+    const env = loadEnv({ DATABASE_URL: "file:./dev.db" });
+
+    expect(env.CRON_EXPRESSION).toBe("0 * * * *");
+  });
+
+  it("leaves webhook variables undefined when not configured", () => {
+    const env = loadEnv({ DATABASE_URL: "file:./dev.db" });
+
+    expect(env.DISCORD_WEBHOOK_URL).toBeUndefined();
+    expect(env.TELEGRAM_BOT_TOKEN).toBeUndefined();
+    expect(env.TELEGRAM_CHAT_ID).toBeUndefined();
+  });
+
+  it("accepts configured webhook variables", () => {
+    const env = loadEnv({
+      DATABASE_URL: "file:./dev.db",
+      DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/123/abc",
+      TELEGRAM_BOT_TOKEN: "bot-token",
+      TELEGRAM_CHAT_ID: "chat-id",
+    });
+
+    expect(env.DISCORD_WEBHOOK_URL).toBe("https://discord.com/api/webhooks/123/abc");
+    expect(env.TELEGRAM_BOT_TOKEN).toBe("bot-token");
+    expect(env.TELEGRAM_CHAT_ID).toBe("chat-id");
   });
 
   it("throws EnvValidationError when DATABASE_URL is missing", () => {
