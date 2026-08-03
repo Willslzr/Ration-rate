@@ -5,9 +5,9 @@ export const targets: ScrapeTarget[] = [
   {
     isoCode: "VES",
     sourceName: "bcv_oficial",
-    url: "https://www.bcv.org.ve",
+    url: "https://www.bcv.org.ve/",
     type: "html",
-    selector: "#dolar .centrado strong",
+    selector: "#dolar > div > div > div.col-sm-6.col-xs-6.centrado.textp > strong",
     active: true,
   },
   {
