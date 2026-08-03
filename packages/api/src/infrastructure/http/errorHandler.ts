@@ -1,7 +1,7 @@
 import { InvalidCurrencyError, InvalidDateError, RateNotFoundError } from "@ratio/core";
 import type { FastifyError } from "fastify";
 import type { ServerInstance } from "./buildServer.js";
-import { UnauthorizedError } from "./httpErrors.js";
+import { RateLimitExceededError, UnauthorizedError } from "./httpErrors.js";
 
 export interface ProblemDetails {
   readonly type: string;
@@ -37,6 +37,9 @@ function resolveProblem(error: unknown): ResolvedProblem {
   }
   if (error instanceof UnauthorizedError) {
     return { status: 401, title: "Unauthorized", detail: error.message, code: error.code };
+  }
+  if (error instanceof RateLimitExceededError) {
+    return { status: 429, title: "Too Many Requests", detail: error.message, code: error.code };
   }
   if (isValidationError(error)) {
     return {

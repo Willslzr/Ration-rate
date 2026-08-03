@@ -7,3 +7,13 @@ export class UnauthorizedError extends Error {
     this.name = "UnauthorizedError";
   }
 }
+
+export class RateLimitExceededError extends Error {
+  readonly code = "RATE_LIMIT_EXCEEDED";
+  readonly statusCode = 429;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "RateLimitExceededError";
+  }
+}

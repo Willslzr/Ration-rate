@@ -5,6 +5,7 @@ import Fastify from "fastify";
 import { registerApiKeyAuth } from "./apiKeyAuth.js";
 import { registerErrorHandler } from "./errorHandler.js";
 import { registerHealthRoute } from "./healthRoute.js";
+import { registerRateLimit } from "./rateLimit.js";
 import { registerRatesRoutes } from "./ratesRoutes.js";
 
 export type NodeEnv = "development" | "test" | "production";
@@ -15,6 +16,8 @@ export interface BuildServerDeps {
   readonly checkDatabaseHealth: () => Promise<boolean>;
   /** Valid API keys for /v1/rates/*. Defaults to none, i.e. those routes reject every request. */
   readonly apiKeys?: readonly string[];
+  /** Requests allowed per minute, keyed by API key (or IP). Defaults to 100. */
+  readonly rateLimitMax?: number;
   readonly nodeEnv?: NodeEnv;
 }
 
@@ -50,7 +53,14 @@ export function buildServer(deps: BuildServerDeps): ServerInstance {
   const app = createFastifyInstance(deps.nodeEnv);
 
   registerErrorHandler(app);
-  registerHealthRoute(app, deps);
+  registerRateLimit(app, deps.rateLimitMax !== undefined ? { max: deps.rateLimitMax } : {});
+
+  // Registered as plugins (not plain app.get calls) so they boot after the
+  // rate-limit plugin above: @fastify/rate-limit attaches itself to routes
+  // via an onRoute hook, which only fires for routes registered afterwards.
+  app.register(async (healthScope) => {
+    registerHealthRoute(healthScope, deps);
+  });
 
   app.register(async (ratesScope) => {
     registerApiKeyAuth(ratesScope, { apiKeys: deps.apiKeys ?? [] });
