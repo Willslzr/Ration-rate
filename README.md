@@ -1,5 +1,7 @@
 # Ratio
 
+[![CI](https://github.com/williamyenn/ration-rate/actions/workflows/ci.yml/badge.svg)](https://github.com/williamyenn/ration-rate/actions/workflows/ci.yml)
+
 API y SDK para consultar tasas de cambio históricas de monedas sudamericanas y el Euro frente al dólar estadounidense.
 
 ## Estructura del monorepo
