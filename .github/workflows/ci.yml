@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # pnpm@11 (pinned via "packageManager") requires Node >=22.13 -- it uses
+      # the node:sqlite builtin internally. The app itself only targets
+      # Node >=20 (see Dockerfile, which builds on node:22 and runs on
+      # node:20 for that same reason), but this job invokes pnpm directly,
+      # so it needs Node 22 here too.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      # Playwright's smoke test is marked `.skip` (packages/api/src/infrastructure/scraping/PlaywrightExtractor.test.ts)
+      # and never executes here or locally -- no browser install needed.
+      - name: Test with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: warn
