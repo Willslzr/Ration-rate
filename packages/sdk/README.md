@@ -19,12 +19,11 @@ npm install @willslzr/ration
 
 ## Quickstart
 
-El SDK necesita saber contra qué instancia de la [API Ratio](https://github.com/Willslzr/Ration-rate) hablar. La forma recomendada es vía variables de entorno, así el código nunca hardcodea la URL:
+El SDK necesita saber contra qué instancia de la [API Ratio](https://github.com/Willslzr/Ration-rate) hablar. Las lecturas son públicas — no hace falta ninguna API key. La forma recomendada es vía variable de entorno, así el código nunca hardcodea la URL:
 
 ```bash
 # .env
 RATION_BASE_URL="https://tu-instancia-de-ratio.example.com"   # reemplaza por donde despliegues tu API
-RATION_API_KEY="tu-api-key"
 ```
 
 ```typescript
@@ -35,7 +34,7 @@ console.log(latest);
 // { isoCode: 'VES', rate: '36.5842', source: 'bcv_oficial', extractedAt: 2026-08-02T10:00:00.000Z }
 ```
 
-También se pueden pasar explícitamente por opción, sin depender de variables de entorno:
+También se puede pasar explícitamente por opción, sin depender de la variable de entorno:
 
 ```typescript
 import ration from "@willslzr/ration";
@@ -43,13 +42,11 @@ import ration from "@willslzr/ration";
 // Tasa más reciente
 const latest = await ration("VES", undefined, {
   baseUrl: "https://tu-instancia-de-ratio.example.com",
-  apiKey: "tu-api-key",
 });
 
 // Tasa para una fecha específica (acepta 'DD/MM/YYYY', 'YYYY-MM-DD' o Date)
 const historic = await ration("VES", "14/04/2026", {
   baseUrl: "https://tu-instancia-de-ratio.example.com",
-  apiKey: "tu-api-key",
 });
 ```
 
@@ -57,12 +54,12 @@ const historic = await ration("VES", "14/04/2026", {
 
 `ration(isoCode: string, date?: string | Date, options?: RationOptions)`
 
-| Opción      | Tipo     | Default                       | Descripción                                                                 |
-| ----------- | -------- | ----------------------------- | --------------------------------------------------------------------------- |
-| `baseUrl`   | `string` | `process.env.RATION_BASE_URL` | URL base de tu instancia de la API Ratio. Requerido (por opción o env var). |
-| `apiKey`    | `string` | `process.env.RATION_API_KEY`  | Se envía como header `x-api-key`. Omitir si la API no lo requiere.          |
-| `source`    | `string` | —                             | Filtra por fuente específica (ej. `"bcv_oficial"`, `"paralelo"`).           |
-| `timeoutMs` | `number` | `10000`                       | Timeout de la petición, vía `AbortController`.                              |
+| Opción      | Tipo     | Default                       | Descripción                                                                                                                                                                    |
+| ----------- | -------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `baseUrl`   | `string` | `process.env.RATION_BASE_URL` | URL base de tu instancia de la API Ratio. Requerido (por opción o env var).                                                                                                    |
+| `apiKey`    | `string` | `process.env.RATION_API_KEY`  | Se envía como header `x-api-key`. No hace falta contra la instancia de referencia (las lecturas son públicas) — solo si corres tu propio fork con auth habilitada en lecturas. |
+| `source`    | `string` | —                             | Filtra por fuente específica (ej. `"bcv_oficial"`, `"paralelo"`).                                                                                                              |
+| `timeoutMs` | `number` | `10000`                       | Timeout de la petición, vía `AbortController`.                                                                                                                                 |
 
 ## Resultado
 

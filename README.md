@@ -172,7 +172,7 @@ Stack de deploy gratuito: **Render** (API, desde el mismo `Dockerfile`) + **Neon
 2. **New → Blueprint**: Render detecta `render.yaml` en la raíz del repo automáticamente (alternativa manual: **New → Web Service** → seleccionar el repo → Runtime **Docker** → plan **Free**).
 3. El Blueprint pide los valores de las variables marcadas `sync: false` en `render.yaml`:
    - `DATABASE_URL`: la connection string de Neon del paso anterior.
-   - `API_KEYS`: una clave larga y aleatoria (ej. `openssl rand -hex 32`) — la usan tanto el SDK como el workflow de scraping.
+   - `API_KEYS`: una clave larga y aleatoria (ej. `openssl rand -hex 32`) — protege únicamente `POST /v1/scrape` (la usa el workflow de scraping). Las rutas de lectura (`GET /v1/rates/*`) son públicas, no la necesitan.
    - `DISCORD_WEBHOOK_URL` / `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: opcionales, se pueden dejar vacíos.
 4. `CRON_ENABLED=false` ya viene fijo en `render.yaml` (no es un secreto, es una decisión de esta configuración de deploy) — el scraping se dispara externamente en el siguiente paso.
 5. Deploy: Render construye la imagen desde el `Dockerfile`, corre `prisma migrate deploy` contra Neon al arrancar (`docker-entrypoint.sh`), y expone `https://tu-servicio.onrender.com` gratis.
@@ -186,19 +186,19 @@ El workflow `.github/workflows/scrape.yml` ya está en el repo (corre cada hora 
    - `RATIO_API_URL`: la URL de Render (ej. `https://tu-servicio.onrender.com`, sin slash final).
    - `RATIO_API_KEY`: la misma API key configurada en Render.
 2. Prueba manual: **Actions → Scheduled Scrape → Run workflow**. El primer intento puede tardar en responder porque despierta el servicio dormido — el workflow ya reintenta hasta 3 veces con 30s de espera para cubrir justo eso.
-3. Confirmar que llegaron datos: `curl -H "x-api-key: TU_API_KEY" https://tu-servicio.onrender.com/v1/rates/VES/latest`.
+3. Confirmar que llegaron datos: `curl https://tu-servicio.onrender.com/v1/rates/VES/latest` (sin `x-api-key` — esa ruta es pública).
 
 Cada push a `main` redespliega la API automáticamente (comportamiento por defecto de Render) — no hay paso manual adicional para deploys posteriores al primero.
 
 ## Endpoints
 
-Base URL local: `http://localhost:3000`. Las rutas `/v1/rates/*` requieren el header `x-api-key`; `/health` no.
+Base URL local: `http://localhost:3000`. `GET /v1/rates/*` y `/health` son públicas — no requieren autenticación (este servicio no cobra ni limita por usuario). Solo `POST /v1/scrape` requiere el header `x-api-key`, porque dispara trabajo real (scraping externo + escrituras en la base de datos).
 
 | Método | Ruta                        | Auth | Descripción                                                                                                                                                                                                                                  |
 | ------ | --------------------------- | :--: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GET    | `/health`                   |  No  | Estado del servicio y conectividad a la base de datos.                                                                                                                                                                                       |
-| GET    | `/v1/rates/:isoCode/latest` |  Sí  | Última tasa registrada para una moneda. Query opcional: `source`.                                                                                                                                                                            |
-| GET    | `/v1/rates/:isoCode`        |  Sí  | Tasa vigente en una fecha dada. Query: `date` (requerido, `YYYY-MM-DD`), `source` (opcional).                                                                                                                                                |
+| GET    | `/v1/rates/:isoCode/latest` |  No  | Última tasa registrada para una moneda. Query opcional: `source`.                                                                                                                                                                            |
+| GET    | `/v1/rates/:isoCode`        |  No  | Tasa vigente en una fecha dada. Query: `date` (requerido, `YYYY-MM-DD`), `source` (opcional).                                                                                                                                                |
 | POST   | `/v1/scrape`                |  Sí  | Dispara el scraping bajo demanda. `200`/`207` (fallos parciales) con `{succeeded, failed}`, `409` si ya hay un scrape en curso. Pensado para disparar externamente en deploys donde el cron interno no es confiable (ver [Deploy](#deploy)). |
 
 ```bash
@@ -206,22 +206,22 @@ Base URL local: `http://localhost:3000`. Las rutas `/v1/rates/*` requieren el he
 curl http://localhost:3000/health
 # => {"status":"ok","database":"ok"}
 
-# Última tasa oficial de VES
-curl -H "x-api-key: dev-local-key" http://localhost:3000/v1/rates/VES/latest
+# Última tasa oficial de VES (pública, sin api key)
+curl http://localhost:3000/v1/rates/VES/latest
 # => {"isoCode":"VES","rate":"36.5842","source":"bcv_oficial","extractedAt":"2026-08-02T10:00:00.000Z"}
 
 # Filtrando por fuente (bcv_oficial vs. paralelo)
-curl -H "x-api-key: dev-local-key" "http://localhost:3000/v1/rates/VES/latest?source=bcv_oficial"
+curl "http://localhost:3000/v1/rates/VES/latest?source=bcv_oficial"
 
 # Tasa en una fecha específica
-curl -H "x-api-key: dev-local-key" "http://localhost:3000/v1/rates/VES?date=2026-04-14"
+curl "http://localhost:3000/v1/rates/VES?date=2026-04-14"
 
-# Sin api key -> 401
-curl -i http://localhost:3000/v1/rates/VES/latest
-
-# Disparar el scraping manualmente
+# Disparar el scraping manualmente (requiere api key)
 curl -X POST -H "x-api-key: dev-local-key" http://localhost:3000/v1/scrape
 # => {"succeeded":["bcv_oficial","paralelo","oficial","paralelo","oficial","oficial"],"failed":[]}
+
+# /v1/scrape sin api key -> 401
+curl -i -X POST http://localhost:3000/v1/scrape
 ```
 
 Todos los errores (400/401/404/429/500) responden con [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457):
@@ -237,7 +237,7 @@ Todos los errores (400/401/404/429/500) responden con [RFC 9457 Problem Details]
 }
 ```
 
-El límite de rate (`RATE_LIMIT_MAX`, 100 req/min por defecto) se aplica por `x-api-key` (o por IP en rutas sin auth); al excederlo responde `429` con header `Retry-After`.
+El límite de rate (`RATE_LIMIT_MAX`, 100 req/min por defecto) se aplica por IP en las rutas públicas (`/v1/rates/*`, `/health`) y por `x-api-key` en `/v1/scrape`; al excederlo responde `429` con header `Retry-After`.
 
 ## SDK (`@willslzr/ration`)
 
@@ -250,36 +250,31 @@ npm install @willslzr/ration
 ```typescript
 import ration from "@willslzr/ration";
 
-// Tasa más reciente
-const latest = await ration("VES", undefined, {
-  baseUrl: "http://localhost:3000",
-  apiKey: "dev-local-key",
-});
+// Tasa más reciente — sin apiKey: las lecturas son públicas, no hace falta clave
+const latest = await ration("VES", undefined, { baseUrl: "http://localhost:3000" });
 console.log(latest);
 // { isoCode: 'VES', rate: '36.5842', source: 'bcv_oficial', extractedAt: 2026-08-02T10:00:00.000Z }
 
 // Tasa histórica (acepta 'DD/MM/YYYY', 'YYYY-MM-DD' o Date)
-const historic = await ration("VES", "14/04/2026", {
-  baseUrl: "http://localhost:3000",
-  apiKey: "dev-local-key",
-});
+const historic = await ration("VES", "14/04/2026", { baseUrl: "http://localhost:3000" });
 ```
 
-`baseUrl` y `apiKey` también pueden venir de `RATION_BASE_URL` / `RATION_API_KEY` (variables de entorno), así que en un proyecto con `.env` cargado alcanza con `await ration("VES")`. Detalle completo de opciones, tipos de retorno y jerarquía de errores (`RationError`, `RationApiError`, `RationTimeoutError`, `RationNetworkError`) en [`packages/sdk/README.md`](packages/sdk/README.md).
+`baseUrl` también puede venir de `RATION_BASE_URL` (variable de entorno), así que en un proyecto con `.env` cargado alcanza con `await ration("VES")`. `apiKey`/`RATION_API_KEY` existen por si en algún momento se protege el servicio o corres tu propio fork con auth habilitada, pero contra esta instancia no son necesarios. Detalle completo de opciones, tipos de retorno y jerarquía de errores (`RationError`, `RationApiError`, `RationTimeoutError`, `RationNetworkError`) en [`packages/sdk/README.md`](packages/sdk/README.md).
 
 ## Variables de entorno
 
-| Variable              | Requerida | Default        | Descripción                                                             |
-| --------------------- | :-------: | -------------- | ----------------------------------------------------------------------- |
-| `DATABASE_URL`        |    Sí     | —              | `file:./dev.db` (SQLite) o `postgresql://...` (Postgres).               |
-| `API_KEYS`            |    Sí     | —              | Lista separada por comas de claves válidas para `x-api-key`.            |
-| `NODE_ENV`            |    No     | `development`  | `development` \| `test` \| `production`. Ajusta el nivel de log.        |
-| `PORT`                |    No     | `3000`         | Puerto HTTP.                                                            |
-| `RATE_LIMIT_MAX`      |    No     | `100`          | Requests por minuto por `x-api-key`/IP antes de responder `429`.        |
-| `CRON_EXPRESSION`     |    No     | `0 * * * *`    | Frecuencia del scraper (formato cron estándar).                         |
-| `DISCORD_WEBHOOK_URL` |    No     | _(sin efecto)_ | Si se configura, notifica fallas de scraping a un canal de Discord.     |
-| `TELEGRAM_BOT_TOKEN`  |    No     | _(sin efecto)_ | Junto con `TELEGRAM_CHAT_ID`, notifica fallas de scraping vía Telegram. |
-| `TELEGRAM_CHAT_ID`    |    No     | _(sin efecto)_ | Ver `TELEGRAM_BOT_TOKEN`.                                               |
+| Variable              | Requerida | Default                         | Descripción                                                                                                                                                                             |
+| --------------------- | :-------: | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`        |    Sí     | —                               | `file:./dev.db` (SQLite) o `postgresql://...` (Postgres).                                                                                                                               |
+| `API_KEYS`            |    Sí     | —                               | Lista separada por comas de claves válidas para `x-api-key`. Protege solo `POST /v1/scrape` — `GET /v1/rates/*` es pública.                                                             |
+| `NODE_ENV`            |    No     | `development`                   | `development` \| `test` \| `production`. Ajusta el nivel de log.                                                                                                                        |
+| `PORT`                |    No     | `3000`                          | Puerto HTTP.                                                                                                                                                                            |
+| `RATE_LIMIT_MAX`      |    No     | `100`                           | Requests por minuto (por IP en rutas públicas, por `x-api-key` en `/v1/scrape`) antes de responder `429`.                                                                               |
+| `CRON_EXPRESSION`     |    No     | `0 * * * *`                     | Frecuencia del scraper (formato cron estándar).                                                                                                                                         |
+| `CRON_ENABLED`        |    No     | `true`* / `false` en producción | Si es `false`, no se registra el scheduler interno de `node-cron` — usado en Render, cuyo free tier duerme el proceso (ver [Deploy](#deploy)). *`true` salvo que `NODE_ENV=production`. |
+| `DISCORD_WEBHOOK_URL` |    No     | _(sin efecto)_                  | Si se configura, notifica fallas de scraping a un canal de Discord.                                                                                                                     |
+| `TELEGRAM_BOT_TOKEN`  |    No     | _(sin efecto)_                  | Junto con `TELEGRAM_CHAT_ID`, notifica fallas de scraping vía Telegram.                                                                                                                 |
+| `TELEGRAM_CHAT_ID`    |    No     | _(sin efecto)_                  | Ver `TELEGRAM_BOT_TOKEN`.                                                                                                                                                               |
 
 Sin ningún canal de notificación configurado, las fallas de scraping solo se registran en el log (`NoopNotifier`) — nunca detienen el resto de la corrida.
 
