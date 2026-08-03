@@ -1,0 +1,34 @@
+name: Scheduled Scrape
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    name: Trigger POST /v1/scrape
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the scrape endpoint
+        env:
+          RATIO_API_URL: ${{ secrets.RATIO_API_URL }}
+          RATIO_API_KEY: ${{ secrets.RATIO_API_KEY }}
+        run: |
+          # Strip a trailing slash so "$RATIO_API_URL/v1/scrape" never ends up with "//".
+          url="${RATIO_API_URL%/}/v1/scrape"
+
+          # --retry-all-errors (not just connection failures) is needed because
+          # Render's free tier sleeps the process after 15min idle — the first
+          # attempt can time out or 5xx while it wakes up, and up to 3 retries
+          # with a fixed 30s wait give it time to come back before we give up.
+          # --fail makes a non-2xx response count as a failure (and thus fail
+          # this step/workflow) instead of curl treating it as a success.
+          curl --fail --show-error --silent \
+            --retry 3 --retry-delay 30 --retry-all-errors \
+            -X POST "$url" \
+            -H "x-api-key: $RATIO_API_KEY" \
+            -w "\nHTTP %{http_code}\n"
