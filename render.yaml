@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ratio-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render's free tier sleeps the process after 15min idle, which makes
+      # the in-process node-cron scheduler unreliable — scraping is instead
+      # triggered externally via .github/workflows/scrape.yml hitting
+      # POST /v1/scrape. Baked in (not sync: false) because this deployment
+      # is only correct with it set to false; see CLAUDE.md/README "Deploy".
+      - key: CRON_ENABLED
+        value: "false"
+      # Secrets and per-environment values — set manually in the Render
+      # dashboard after the first Blueprint sync (Render prompts for these
+      # during setup, or Dashboard → service → Environment).
+      - key: DATABASE_URL
+        sync: false
+      - key: API_KEYS
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
