@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import type { GetLatestRate, GetRateByDate } from "@ratio/core";
 import Fastify from "fastify";
+import { registerErrorHandler } from "./errorHandler.js";
 import { registerRatesRoutes } from "./ratesRoutes.js";
 
 export type NodeEnv = "development" | "test" | "production";
@@ -40,6 +41,7 @@ function createFastifyInstance(nodeEnv: NodeEnv | undefined) {
 export function buildServer(deps: BuildServerDeps): ServerInstance {
   const app = createFastifyInstance(deps.nodeEnv);
 
+  registerErrorHandler(app);
   registerRatesRoutes(app, deps);
 
   return app;
