@@ -1,6 +1,7 @@
 import { InvalidCurrencyError, InvalidDateError, RateNotFoundError } from "@ratio/core";
 import type { FastifyError } from "fastify";
 import type { ServerInstance } from "./buildServer.js";
+import { UnauthorizedError } from "./httpErrors.js";
 
 export interface ProblemDetails {
   readonly type: string;
@@ -33,6 +34,9 @@ function resolveProblem(error: unknown): ResolvedProblem {
   }
   if (error instanceof RateNotFoundError) {
     return { status: 404, title: "Not Found", detail: error.message, code: error.code };
+  }
+  if (error instanceof UnauthorizedError) {
+    return { status: 401, title: "Unauthorized", detail: error.message, code: error.code };
   }
   if (isValidationError(error)) {
     return {

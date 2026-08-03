@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import type { GetLatestRate, GetRateByDate } from "@ratio/core";
 import Fastify from "fastify";
+import { registerApiKeyAuth } from "./apiKeyAuth.js";
 import { registerErrorHandler } from "./errorHandler.js";
 import { registerHealthRoute } from "./healthRoute.js";
 import { registerRatesRoutes } from "./ratesRoutes.js";
@@ -12,6 +13,8 @@ export interface BuildServerDeps {
   readonly getLatestRate: Pick<GetLatestRate, "execute">;
   readonly getRateByDate: Pick<GetRateByDate, "execute">;
   readonly checkDatabaseHealth: () => Promise<boolean>;
+  /** Valid API keys for /v1/rates/*. Defaults to none, i.e. those routes reject every request. */
+  readonly apiKeys?: readonly string[];
   readonly nodeEnv?: NodeEnv;
 }
 
@@ -30,7 +33,10 @@ function resolveLogLevel(nodeEnv: NodeEnv | undefined): string {
 
 function createFastifyInstance(nodeEnv: NodeEnv | undefined) {
   return Fastify({
-    logger: { level: resolveLogLevel(nodeEnv) },
+    logger: {
+      level: resolveLogLevel(nodeEnv),
+      redact: ['req.headers["x-api-key"]'],
+    },
     genReqId: () => randomUUID(),
   }).withTypeProvider<TypeBoxTypeProvider>();
 }
@@ -45,7 +51,11 @@ export function buildServer(deps: BuildServerDeps): ServerInstance {
 
   registerErrorHandler(app);
   registerHealthRoute(app, deps);
-  registerRatesRoutes(app, deps);
+
+  app.register(async (ratesScope) => {
+    registerApiKeyAuth(ratesScope, { apiKeys: deps.apiKeys ?? [] });
+    registerRatesRoutes(ratesScope, deps);
+  });
 
   return app;
 }

@@ -1,6 +1,9 @@
+export { registerApiKeyAuth } from "./apiKeyAuth.js";
+export type { ApiKeyAuthOptions } from "./apiKeyAuth.js";
 export { buildServer } from "./buildServer.js";
 export type { BuildServerDeps, NodeEnv, ServerInstance } from "./buildServer.js";
 export { registerErrorHandler } from "./errorHandler.js";
+export { UnauthorizedError } from "./httpErrors.js";
 export type { ProblemDetails } from "./errorHandler.js";
 export { registerHealthRoute, HealthResponseSchema } from "./healthRoute.js";
 export type { HealthRouteDeps } from "./healthRoute.js";
