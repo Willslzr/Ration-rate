@@ -35,6 +35,11 @@ services:
       API_KEYS: ${API_KEYS:-change-me-in-production}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
       CRON_EXPRESSION: ${CRON_EXPRESSION:-0 * * * *}
+      # Defaults to false in production (NODE_ENV here), but this container
+      # doesn't sleep like Render's free tier does, so the internal scheduler
+      # is safe to keep on here — override with CRON_ENABLED=false if you'd
+      # rather trigger POST /v1/scrape externally even for this deployment.
+      CRON_ENABLED: ${CRON_ENABLED:-true}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}

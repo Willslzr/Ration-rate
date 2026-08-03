@@ -14,6 +14,7 @@ function buildEnv(overrides: Partial<Env> = {}): Env {
     NODE_ENV: "test",
     PORT: 3000,
     CRON_EXPRESSION: "0 * * * *",
+    CRON_ENABLED: true,
     API_KEYS: ["test-key"],
     RATE_LIMIT_MAX: 100,
     ...overrides,

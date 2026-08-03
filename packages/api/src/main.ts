@@ -24,7 +24,14 @@ async function main(): Promise<void> {
     targets: container.targets,
     logger: app.log,
   });
-  scheduler.start();
+
+  if (container.env.CRON_ENABLED) {
+    scheduler.start();
+  } else {
+    app.log.info(
+      "CRON_ENABLED=false — internal scheduler not started; expecting an external trigger for POST /v1/scrape.",
+    );
+  }
 
   registerGracefulShutdown({ scheduler, container, logger: app.log });
 

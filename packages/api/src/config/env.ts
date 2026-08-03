@@ -14,6 +14,13 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
   CRON_EXPRESSION: z.string().min(1, "CRON_EXPRESSION must not be empty").default("0 * * * *"),
+  // No .default() here: the effective default depends on NODE_ENV, resolved
+  // in loadEnv() below (zod can't reference another field's value from
+  // within a single field's own schema).
+  CRON_ENABLED: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.enum(["true", "false"], { message: 'CRON_ENABLED must be "true" or "false"' }).optional(),
+  ),
   DISCORD_WEBHOOK_URL: optionalNonEmptyString,
   TELEGRAM_BOT_TOKEN: optionalNonEmptyString,
   TELEGRAM_CHAT_ID: optionalNonEmptyString,
@@ -30,7 +37,8 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
 });
 
-export type Env = z.infer<typeof envSchema>;
+type ParsedEnv = z.infer<typeof envSchema>;
+export type Env = Omit<ParsedEnv, "CRON_ENABLED"> & { readonly CRON_ENABLED: boolean };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const result = envSchema.safeParse(source);
@@ -40,5 +48,18 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       .join("; ");
     throw new EnvValidationError(`Invalid environment configuration: ${details}`);
   }
-  return result.data;
+
+  const data = result.data;
+  return {
+    ...data,
+    // Render's free tier (and similar) sleeps the process after idle
+    // periods, making the in-process node-cron scheduler unreliable in
+    // production — there, scraping is expected to be triggered externally
+    // (see .github/workflows/scrape.yml) instead. Development/test keep the
+    // scheduler on by default so local runs behave as before.
+    CRON_ENABLED:
+      data.CRON_ENABLED === undefined
+        ? data.NODE_ENV !== "production"
+        : data.CRON_ENABLED === "true",
+  };
 }

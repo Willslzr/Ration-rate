@@ -15,6 +15,7 @@ describe("loadEnv", () => {
       NODE_ENV: "development",
       PORT: 3000,
       CRON_EXPRESSION: "0 * * * *",
+      CRON_ENABLED: true,
       API_KEYS: ["test-key"],
       RATE_LIMIT_MAX: 100,
     });
@@ -102,5 +103,38 @@ describe("loadEnv", () => {
 
   it("includes the failing field name in the error message", () => {
     expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
+  });
+
+  describe("CRON_ENABLED", () => {
+    it("defaults to true when NODE_ENV is not production and CRON_ENABLED is unset", () => {
+      expect(loadEnv(baseEnv({ NODE_ENV: "development" })).CRON_ENABLED).toBe(true);
+      expect(loadEnv(baseEnv({ NODE_ENV: "test" })).CRON_ENABLED).toBe(true);
+    });
+
+    it("defaults to false when NODE_ENV is production and CRON_ENABLED is unset", () => {
+      expect(loadEnv(baseEnv({ NODE_ENV: "production" })).CRON_ENABLED).toBe(false);
+    });
+
+    it("respects an explicit CRON_ENABLED=true in production", () => {
+      expect(loadEnv(baseEnv({ NODE_ENV: "production", CRON_ENABLED: "true" })).CRON_ENABLED).toBe(
+        true,
+      );
+    });
+
+    it("respects an explicit CRON_ENABLED=false in development", () => {
+      expect(
+        loadEnv(baseEnv({ NODE_ENV: "development", CRON_ENABLED: "false" })).CRON_ENABLED,
+      ).toBe(false);
+    });
+
+    it("treats an empty-string CRON_ENABLED as not configured (falls back to the NODE_ENV default)", () => {
+      expect(loadEnv(baseEnv({ NODE_ENV: "production", CRON_ENABLED: "" })).CRON_ENABLED).toBe(
+        false,
+      );
+    });
+
+    it("throws EnvValidationError for an invalid CRON_ENABLED value", () => {
+      expect(() => loadEnv(baseEnv({ CRON_ENABLED: "yes" }))).toThrow(EnvValidationError);
+    });
   });
 });
