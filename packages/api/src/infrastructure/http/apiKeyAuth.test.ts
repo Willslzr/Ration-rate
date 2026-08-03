@@ -30,11 +30,11 @@ function buildDeps(overrides: Partial<BuildServerDeps> = {}): BuildServerDeps {
   };
 }
 
-describe("API key authentication", () => {
+describe("API key authentication (POST /v1/scrape only — GET /v1/rates/* is public)", () => {
   it("returns 401 Problem Details when the x-api-key header is missing", async () => {
     const app = buildServer(buildDeps());
 
-    const response = await app.inject({ method: "GET", url: "/v1/rates/VES/latest" });
+    const response = await app.inject({ method: "POST", url: "/v1/scrape" });
 
     expect(response.statusCode).toBe(401);
     expect(response.headers["content-type"]).toContain("application/problem+json");
@@ -50,8 +50,8 @@ describe("API key authentication", () => {
     const app = buildServer(buildDeps());
 
     const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
+      method: "POST",
+      url: "/v1/scrape",
       headers: { "x-api-key": "wrong-key" },
     });
 
@@ -63,8 +63,8 @@ describe("API key authentication", () => {
     const app = buildServer(buildDeps());
 
     const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
+      method: "POST",
+      url: "/v1/scrape",
       headers: { "x-api-key": "short" },
     });
 
@@ -75,8 +75,8 @@ describe("API key authentication", () => {
     const app = buildServer(buildDeps());
 
     const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
+      method: "POST",
+      url: "/v1/scrape",
       headers: { "x-api-key": API_KEY },
     });
 
@@ -87,23 +87,24 @@ describe("API key authentication", () => {
     const app = buildServer(buildDeps({ apiKeys: ["key-a", "key-b"] }));
 
     const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
+      method: "POST",
+      url: "/v1/scrape",
       headers: { "x-api-key": "key-b" },
     });
 
     expect(response.statusCode).toBe(200);
   });
 
-  it("applies to the by-date rates route too", async () => {
+  it("never echoes the received API key back in the response body", async () => {
     const app = buildServer(buildDeps());
 
     const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES?date=2026-04-14",
+      method: "POST",
+      url: "/v1/scrape",
+      headers: { "x-api-key": "super-secret-value" },
     });
 
-    expect(response.statusCode).toBe(401);
+    expect(response.body).not.toContain("super-secret-value");
   });
 
   it("does not require an API key for /health", async () => {
@@ -114,15 +115,19 @@ describe("API key authentication", () => {
     expect(response.statusCode).toBe(200);
   });
 
-  it("never echoes the received API key back in the response body", async () => {
+  it("does not require an API key for GET /v1/rates/:isoCode/latest", async () => {
     const app = buildServer(buildDeps());
 
-    const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
-      headers: { "x-api-key": "super-secret-value" },
-    });
+    const response = await app.inject({ method: "GET", url: "/v1/rates/VES/latest" });
 
-    expect(response.body).not.toContain("super-secret-value");
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("does not require an API key for GET /v1/rates/:isoCode", async () => {
+    const app = buildServer(buildDeps());
+
+    const response = await app.inject({ method: "GET", url: "/v1/rates/VES?date=2026-04-14" });
+
+    expect(response.statusCode).toBe(200);
   });
 });

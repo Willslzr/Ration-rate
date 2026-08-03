@@ -75,12 +75,8 @@ afterAll(async () => {
 });
 
 describe("API end-to-end", () => {
-  it("seeds data and returns the latest rate for a currency", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES/latest",
-      headers: { "x-api-key": API_KEY },
-    });
+  it("seeds data and returns the latest rate for a currency, no API key required", async () => {
+    const response = await app.inject({ method: "GET", url: "/v1/rates/VES/latest" });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
@@ -92,11 +88,7 @@ describe("API end-to-end", () => {
   });
 
   it("returns the seeded rate for a specific date", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/VES?date=2026-04-10",
-      headers: { "x-api-key": API_KEY },
-    });
+    const response = await app.inject({ method: "GET", url: "/v1/rates/VES?date=2026-04-10" });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
@@ -108,20 +100,26 @@ describe("API end-to-end", () => {
   });
 
   it("returns 404 for a currency with no seeded data", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/v1/rates/ARS/latest",
-      headers: { "x-api-key": API_KEY },
-    });
+    const response = await app.inject({ method: "GET", url: "/v1/rates/ARS/latest" });
 
     expect(response.statusCode).toBe(404);
     expect(response.json()).toMatchObject({ code: "RATE_NOT_FOUND" });
   });
 
-  it("returns 401 when no api key is provided", async () => {
-    const response = await app.inject({ method: "GET", url: "/v1/rates/VES/latest" });
+  it("returns 401 for POST /v1/scrape when no api key is provided", async () => {
+    const response = await app.inject({ method: "POST", url: "/v1/scrape" });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("accepts POST /v1/scrape with a valid api key", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/scrape",
+      headers: { "x-api-key": API_KEY },
+    });
+
+    expect(response.statusCode).toBe(200);
   });
 });

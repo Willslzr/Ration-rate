@@ -18,7 +18,12 @@ export interface BuildServerDeps {
   readonly scrapeAllTargets: Pick<ScrapeAllTargets, "execute">;
   readonly targets: readonly ScrapeTarget[];
   readonly checkDatabaseHealth: () => Promise<boolean>;
-  /** Valid API keys for /v1/rates/* and /v1/scrape. Defaults to none, i.e. those routes reject every request. */
+  /**
+   * Valid API keys for POST /v1/scrape — the only protected route. GET
+   * /v1/rates/* is public (this API isn't metered or rate-limited per
+   * consumer beyond the shared IP-based rate limit; there's nothing to
+   * protect reads from). Defaults to none, i.e. /v1/scrape rejects every request.
+   */
   readonly apiKeys?: readonly string[];
   /** Requests allowed per minute, keyed by API key (or IP). Defaults to 100. */
   readonly rateLimitMax?: number;
@@ -70,10 +75,18 @@ export function buildServer(deps: BuildServerDeps): ServerInstance {
     registerHealthRoute(healthScope, deps);
   });
 
-  app.register(async (protectedScope) => {
-    registerApiKeyAuth(protectedScope, { apiKeys: deps.apiKeys ?? [] });
-    registerRatesRoutes(protectedScope, deps);
-    registerScrapeRoute(protectedScope, deps);
+  // Public: no auth. This is what the SDK actually calls — free, unmetered
+  // reads, no API key required.
+  app.register(async (ratesScope) => {
+    registerRatesRoutes(ratesScope, deps);
+  });
+
+  // Protected: POST /v1/scrape triggers real work (requests to the scraped
+  // sites, writes against a free-tier Postgres) — only the scheduled trigger
+  // (see .github/workflows/scrape.yml) should be able to call this.
+  app.register(async (scrapeScope) => {
+    registerApiKeyAuth(scrapeScope, { apiKeys: deps.apiKeys ?? [] });
+    registerScrapeRoute(scrapeScope, deps);
   });
 
   return app;

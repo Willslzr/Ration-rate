@@ -79,8 +79,8 @@ afterAll(async () => {
 });
 
 describe("ration() end-to-end against a real server", () => {
-  it("fetches the latest seeded rate", async () => {
-    const result = await ration("VES", undefined, { baseUrl, apiKey: API_KEY });
+  it("fetches the latest seeded rate, no apiKey needed (GET /v1/rates/* is public)", async () => {
+    const result = await ration("VES", undefined, { baseUrl });
 
     expect(result).toEqual({
       isoCode: "VES",
@@ -91,7 +91,7 @@ describe("ration() end-to-end against a real server", () => {
   });
 
   it("fetches the seeded rate for a specific date, given in DD/MM/YYYY", async () => {
-    const result = await ration("VES", "14/04/2026", { baseUrl, apiKey: API_KEY });
+    const result = await ration("VES", "14/04/2026", { baseUrl });
 
     expect(result).toEqual({
       isoCode: "VES",
