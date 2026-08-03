@@ -161,4 +161,34 @@ describe("ration", () => {
       RationApiError,
     );
   });
+
+  it("rejects a 2xx response with a missing field instead of returning bad data", async () => {
+    const { rate: _rate, ...bodyWithoutRate } = SAMPLE_BODY;
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(bodyWithoutRate));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(ration("VES", undefined, { baseUrl: "https://api.ratio.dev" })).rejects.toThrow(
+      RationError,
+    );
+  });
+
+  it("rejects a 2xx response with an unparseable extractedAt", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ ...SAMPLE_BODY, extractedAt: "not-a-date" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(ration("VES", undefined, { baseUrl: "https://api.ratio.dev" })).rejects.toThrow(
+      RationError,
+    );
+  });
+
+  it("rejects a non-object 2xx response body", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse("not an object"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(ration("VES", undefined, { baseUrl: "https://api.ratio.dev" })).rejects.toThrow(
+      RationError,
+    );
+  });
 });

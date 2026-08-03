@@ -23,6 +23,24 @@ interface RateApiResponse {
   readonly extractedAt: string;
 }
 
+/**
+ * The server's JSON body is external input from the SDK's point of view —
+ * validated at runtime instead of trusted via a blind type assertion.
+ */
+function isRateApiResponse(value: unknown): value is RateApiResponse {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.isoCode === "string" &&
+    typeof candidate.rate === "string" &&
+    typeof candidate.source === "string" &&
+    typeof candidate.extractedAt === "string" &&
+    !Number.isNaN(Date.parse(candidate.extractedAt))
+  );
+}
+
 function readEnvVar(name: string): string | undefined {
   if (typeof process === "undefined" || typeof process.env !== "object") {
     return undefined;
@@ -84,10 +102,14 @@ export async function ration(
           source: options.source,
         })}`;
 
-  const body = await fetchJson<RateApiResponse>(`${baseUrl}${path}`, {
+  const body = await fetchJson<unknown>(`${baseUrl}${path}`, {
     ...(apiKey !== undefined ? { apiKey } : {}),
     ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
   });
+
+  if (!isRateApiResponse(body)) {
+    throw new RationError("Received an unexpected response shape from the Ratio API.");
+  }
 
   return toResult(body);
 }
