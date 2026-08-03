@@ -1,8 +1,37 @@
 {
   "name": "@willslzr/ration",
-  "version": "0.0.0",
-  "private": true,
-  "description": "SDK cliente para consumir la API de tasas de cambio Ratio",
+  "version": "0.1.0",
+  "description": "Lightweight TypeScript SDK for South American currency exchange rates — official BCV dollar rate for Venezuela (VES) today, more currencies (ARS, COP, MXN, EUR) on the roadmap. Zero runtime dependencies, dual ESM/CJS.",
+  "keywords": [
+    "exchange-rate",
+    "exchange-rates",
+    "currency",
+    "currency-converter",
+    "currency-api",
+    "dollar",
+    "dolar",
+    "tasa-dolar",
+    "tasa-de-cambio",
+    "usd",
+    "bcv",
+    "venezuela",
+    "south-america",
+    "latam",
+    "sdk",
+    "api-client",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "willslzr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Willslzr/Ration-rate.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/Willslzr/Ration-rate/tree/main/packages/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/Willslzr/Ration-rate/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -20,9 +49,17 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit -p tsconfig.json"
