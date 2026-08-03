@@ -2,7 +2,8 @@ name: Scheduled Scrape
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    # Twice a day: 08:00 and 20:00 VET (Venezuela, UTC-4) = 12:00 and 00:00 UTC.
+    - cron: "0 0,12 * * *"
   workflow_dispatch:
 
 permissions:

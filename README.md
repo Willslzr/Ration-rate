@@ -84,7 +84,7 @@ ratio/
 
 ## Monedas soportadas
 
-Actualizadas cada hora vía cron (`CRON_EXPRESSION`, default `0 * * * *`) contra las fuentes configuradas en `packages/api/src/targets.config.ts`:
+Actualizadas contra las fuentes configuradas en `packages/api/src/targets.config.ts`. En producción, dos veces al día (08:00 y 20:00 VET) vía `.github/workflows/scrape.yml`; en local/self-hosted con `CRON_ENABLED=true`, el cron interno usa `CRON_EXPRESSION` (default cada hora, `0 * * * *`) — ver [Deploy](#deploy):
 
 | Moneda             | Código ISO | Fuentes (`source`)                                                                                                                   |
 | ------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -182,7 +182,7 @@ Stack de deploy gratuito: **Render** (API, desde el mismo `Dockerfile`) + **Neon
 
 ### 3. Scraping externo — GitHub Actions
 
-El workflow `.github/workflows/scrape.yml` ya está en el repo (corre cada hora + se puede disparar a mano). Solo falta darle credenciales:
+El workflow `.github/workflows/scrape.yml` ya está en el repo (corre dos veces al día, 08:00 y 20:00 VET / 12:00 y 00:00 UTC — ajustable editando el `cron:` del workflow + se puede disparar a mano). Solo falta darle credenciales:
 
 1. GitHub → tu repo → **Settings → Secrets and variables → Actions → New repository secret**:
    - `RATIO_API_URL`: la URL de Render (ej. `https://tu-servicio.onrender.com`, sin slash final).
