@@ -53,6 +53,9 @@ importers:
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      node-cron:
+        specifier: ^4.6.0
+        version: 4.6.0
       playwright:
         specifier: ^1.62.1
         version: 1.62.1
@@ -1205,6 +1208,10 @@ packages:
   node-addon-api@8.9.1:
     resolution: {integrity: sha512-4eUQWVPCUUUiBjLnHS3cXWeC6ryoPUc0U3rP7IuzapoGbzMqd/r6KKO0clr0b+snQhsrueFEhCZDdK+LK7hxKg==}
     engines: {node: ^18 || ^20 || >= 21}
+
+  node-cron@4.6.0:
+    resolution: {integrity: sha512-Si/bzYiKRHOB8/a99T2+SDGN582ONDMSTlJr5oCkT6GtnqPjZ2s10eoQRYkW9ZHwjVxONL+W8Fb+qR0AHMQsdg==}
+    engines: {node: '>=20'}
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
@@ -2768,6 +2775,8 @@ snapshots:
       semver: 7.8.5
 
   node-addon-api@8.9.1: {}
+
+  node-cron@4.6.0: {}
 
   nth-check@2.1.1:
     dependencies:
