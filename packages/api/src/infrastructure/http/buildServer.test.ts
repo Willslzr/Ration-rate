@@ -1,9 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { RateNotFoundError } from "@ratio/core";
+import { describe, expect, it, vi } from "vitest";
 import { buildServer } from "./buildServer.js";
+import type { BuildServerDeps } from "./buildServer.js";
+
+function buildDeps(overrides: Partial<BuildServerDeps> = {}): BuildServerDeps {
+  return {
+    getLatestRate: { execute: vi.fn().mockRejectedValue(new RateNotFoundError("not found")) },
+    getRateByDate: { execute: vi.fn().mockRejectedValue(new RateNotFoundError("not found")) },
+    nodeEnv: "test",
+    ...overrides,
+  };
+}
 
 describe("buildServer", () => {
   it("builds a working Fastify instance", async () => {
-    const app = buildServer({ nodeEnv: "test" });
+    const app = buildServer(buildDeps());
 
     const response = await app.inject({ method: "GET", url: "/does-not-exist" });
 
@@ -11,8 +22,8 @@ describe("buildServer", () => {
   });
 
   it("keeps no global state — two instances never share routes", async () => {
-    const appA = buildServer({ nodeEnv: "test" });
-    const appB = buildServer({ nodeEnv: "test" });
+    const appA = buildServer(buildDeps());
+    const appB = buildServer(buildDeps());
     appA.get("/marker", async () => ({ from: "a" }));
 
     const responseA = await appA.inject({ method: "GET", url: "/marker" });
@@ -23,7 +34,7 @@ describe("buildServer", () => {
   });
 
   it("assigns a UUID-shaped request id to each request", async () => {
-    const app = buildServer({ nodeEnv: "test" });
+    const app = buildServer(buildDeps());
     let capturedId = "";
     app.get("/id", async (request) => {
       capturedId = request.id;
@@ -36,7 +47,7 @@ describe("buildServer", () => {
   });
 
   it("silences the logger in test mode by default", () => {
-    const app = buildServer({ nodeEnv: "test" });
+    const app = buildServer(buildDeps());
 
     expect(app.log.level).toBe("silent");
   });
