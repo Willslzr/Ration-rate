@@ -1,1 +1,7 @@
-export { RationError, InvalidDateError } from "./errors.js";
+export {
+  RationError,
+  InvalidDateError,
+  RationApiError,
+  RationTimeoutError,
+  RationNetworkError,
+} from "./errors.js";
