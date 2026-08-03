@@ -35,6 +35,8 @@ pnpm --filter @ratio/api run build
 pnpm --filter ration run test
 ```
 
+Nota: `pnpm typecheck` corre `build` primero — cuando un paquete importa de otro del monorepo (ej. `api` de `@ratio/core`), TypeScript resuelve esos tipos vía el `dist/` del paquete dependido, no desde su código fuente. Sin este build previo, un checkout limpio rompe el typecheck.
+
 ## 3. Convenciones de código
 
 - TypeScript `strict` en todo el monorepo. **Nunca `any` explícito** (ESLint lo bloquea como error).
