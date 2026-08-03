@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import helmet from "@fastify/helmet";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import type { GetLatestRate, GetRateByDate } from "@ratio/core";
 import Fastify from "fastify";
@@ -52,6 +53,10 @@ function createFastifyInstance(nodeEnv: NodeEnv | undefined) {
 export function buildServer(deps: BuildServerDeps): ServerInstance {
   const app = createFastifyInstance(deps.nodeEnv);
 
+  // contentSecurityPolicy is HTML-oriented (this is a JSON-only API with no
+  // rendered pages); the rest of helmet's defaults (HSTS, X-Content-Type-Options,
+  // X-Frame-Options, etc.) still apply to every response, including errors.
+  app.register(helmet, { contentSecurityPolicy: false });
   registerErrorHandler(app);
   registerRateLimit(app, deps.rateLimitMax !== undefined ? { max: deps.rateLimitMax } : {});
 

@@ -52,4 +52,14 @@ describe("buildServer", () => {
 
     expect(app.log.level).toBe("silent");
   });
+
+  it("sets security headers (helmet) on every response, including errors", async () => {
+    const app = buildServer(buildDeps());
+
+    const response = await app.inject({ method: "GET", url: "/does-not-exist" });
+
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["x-dns-prefetch-control"]).toBe("off");
+    expect(response.headers["x-frame-options"]).toBe("SAMEORIGIN");
+  });
 });
