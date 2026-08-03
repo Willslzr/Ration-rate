@@ -1,5 +1,6 @@
 export * from "./app/container.js";
 export * from "./app/scheduler.js";
+export * from "./app/shutdown.js";
 export * from "./config/index.js";
 export * from "./infrastructure/logging/index.js";
 export * from "./infrastructure/notifications/index.js";
