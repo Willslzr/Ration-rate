@@ -1,7 +1,7 @@
 {
   "name": "@willslzr/ration",
-  "version": "0.1.1",
-  "description": "Lightweight TypeScript SDK for South American currency exchange rates — VES (BCV official + parallel), ARS (official + blue), EUR, and COP today, more currencies (MXN) on the roadmap. Zero runtime dependencies, dual ESM/CJS.",
+  "version": "0.1.2",
+  "description": "Lightweight TypeScript SDK for South American currency exchange rates — VES (BCV official + parallel), ARS (official + blue), EUR, COP, and MXN. Zero runtime dependencies, dual ESM/CJS.",
   "keywords": [
     "exchange-rate",
     "exchange-rates",
@@ -19,6 +19,7 @@
     "dolar-blue",
     "euro",
     "colombia",
+    "mexico",
     "south-america",
     "latam",
     "sdk",
