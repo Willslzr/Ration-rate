@@ -55,6 +55,14 @@ export const targets: ScrapeTarget[] = [
       "body > div.wrapper > div.container > div:nth-child(4) > div:nth-child(1) > div > div.box__content > h2 > span",
     active: true,
   },
+  {
+    isoCode: "MXN",
+    sourceName: "banxico_fix",
+    url: "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=6&accion=consultarCuadro&idCuadro=CF373&locale=es",
+    type: "html",
+    selector: "#tablaObservaciones_nodo_1_SF63528 tr:not(.sr-only) td:last-child",
+    active: true,
+  },
 ];
 
 // Fail-fast: importing this module validates every target immediately.

@@ -20,6 +20,7 @@ describe("targets.config", () => {
     expect(bySource("ARS", "paralelo")).toBeDefined();
     expect(bySource("EUR", "oficial")).toBeDefined();
     expect(bySource("COP", "oficial")).toBeDefined();
+    expect(bySource("MXN", "banxico_fix")).toBeDefined();
   });
 
   it("has every configured target active", () => {
