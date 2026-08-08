@@ -92,6 +92,7 @@ Actualizadas contra las fuentes configuradas en `packages/api/src/targets.config
 | Peso argentino     | `ARS`      | `oficial`, `paralelo` ([dolarhoy.com](https://dolarhoy.com))                                                                         |
 | Euro               | `EUR`      | `oficial` ([Banco Central Europeo](https://www.ecb.europa.eu))                                                                       |
 | Peso colombiano    | `COP`      | `oficial` ([dolar-colombia.com](https://www.dolar-colombia.com))                                                                     |
+| Peso mexicano      | `MXN`      | `banxico_fix` ([Banco de México](https://www.banxico.org.mx/portal-mercado-cambiario/))                                              |
 
 Todas via scraping HTML con Cheerio (sin navegador — ver [por qué la imagen no incluye Chromium](#por-qué-la-imagen-no-incluye-chromium)). Agregar una moneda o fuente nueva es declarar un `ScrapeTarget` más en `targets.config.ts` (URL, selector CSS, `type: 'html'` o `'spa'` si la fuente exige JavaScript) — no requiere tocar `core` ni la API.
 
@@ -153,7 +154,7 @@ Ambos schemas definen el mismo modelo `ExchangeRate`; solo cambia `provider` y e
 
 ### Por qué la imagen no incluye Chromium
 
-El `Dockerfile` **no** instala las dependencias del sistema que necesita Playwright/Chromium. Los 6 targets activos en `targets.config.ts` son de tipo `'html'` (Cheerio, sin navegador) — ninguna de las fuentes actuales necesita ejecutar JavaScript para exponer el dato. Instalar Chromium agregaría ~300+ MB para una ruta de código que hoy no se ejecuta. Si se agrega un target `'spa'` que sí lo requiera, el propio `Dockerfile` documenta el comando a agregar:
+El `Dockerfile` **no** instala las dependencias del sistema que necesita Playwright/Chromium. Los 7 targets activos en `targets.config.ts` son de tipo `'html'` (Cheerio, sin navegador) — ninguna de las fuentes actuales necesita ejecutar JavaScript para exponer el dato. Instalar Chromium agregaría ~300+ MB para una ruta de código que hoy no se ejecuta. Si se agrega un target `'spa'` que sí lo requiera, el propio `Dockerfile` documenta el comando a agregar:
 
 ```dockerfile
 RUN pnpm --filter @ratio/api exec playwright install --with-deps chromium
@@ -220,7 +221,7 @@ curl "http://localhost:3000/v1/rates/VES?date=2026-04-14"
 
 # Disparar el scraping manualmente (requiere api key)
 curl -X POST -H "x-api-key: dev-local-key" http://localhost:3000/v1/scrape
-# => {"succeeded":["bcv_oficial","paralelo","oficial","paralelo","oficial","oficial"],"failed":[]}
+# => {"succeeded":["bcv_oficial","paralelo","oficial","paralelo","oficial","oficial","banxico_fix"],"failed":[]}
 
 # /v1/scrape sin api key -> 401
 curl -i -X POST http://localhost:3000/v1/scrape
